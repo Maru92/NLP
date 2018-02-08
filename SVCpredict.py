@@ -16,10 +16,10 @@ labels = labels.values
 print("Train classifier")
 
 # Set the parameters by cross-validation
-tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [3, 30]}, 
-                    {'kernel': ['linear'], 'C': [3, 30]}]
+tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3], 'C': [3, 30]}, 
+                    {'kernel': ['linear'], 'C': [3]}]
 
-clf = GridSearchCV(SVC(), tuned_parameters, cv=5, scoring = 'f1', verbose=1)
+clf = GridSearchCV(SVC(verbose=1), tuned_parameters, cv=5, scoring = 'f1', verbose=1)
 clf.fit(train, labels)
 
 bestParam = clf.best_params_

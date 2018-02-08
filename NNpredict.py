@@ -42,13 +42,13 @@ def create_model(optimizer='rmsprop', init='glorot_uniform'):
 model = KerasClassifier(build_fn=create_model, verbose=1)
 
 #%% Define th hyperparameters of the GridSearchCV 
-optimizers = ['adam','rmsprop']
-init = ['glorot_uniform', 'normal', 'uniform']
-epochs = [20, 100, 150]
+optimizers = ['adam']#,'rmsprop']
+init = ['glorot_uniform']#, 'normal', 'uniform']
+epochs = [20]#, 100, 150]
 batches = [1]
 param_grid = dict(optimizer=optimizers, epochs=epochs, batch_size=batches, init=init)
 
-clf = GridSearchCV(estimator=model, param_grid=param_grid)
+clf = GridSearchCV(estimator=model, param_grid=param_grid, verbose=1)
 
 #%% Fitting the model and refitting it with the whole dataset and the best parameters encountered 
 clf.fit(train, labels)

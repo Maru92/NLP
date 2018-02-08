@@ -1,8 +1,16 @@
-﻿#### GIT
+﻿
+nohup python SVCpredict.py > logs/SVC_train.txt 2> logs/erreurs_SVC.log &
+nohup python NNpredict.py > logs/NN_train.txt 2> logs/erreurs_NN.log &
+
+ps -ef |grep nohup
+ps -ef |grep python
+
+
+#### GIT
 
 Initialisation du repo cloner sur le repo
 git init
-git clone https://github.com/Maru92/Volley-2k15
+git clone https://github.com/Maru92/NLP
 
 
 git pull  //Récupération des nouvelles MAJ
@@ -13,16 +21,24 @@ git commit -a
 
 git push    //Pusher les MAJ
 
+
+
+Need to have a least 2 instances in order to check my results.
+
+Se connecter:
+
+ssh -i "rnn-textgenerator.pem" ec2-user@ec2-34-244-130-53.eu-west-1.compute.amazonaws.com
+
+source activate tensorflow_p36
+
+Transfert de fichier:
+
+scp -i "rnn-textgenerator.pem" testset_full.csv ec2-user@ec2-34-244-130-53.eu-west-1.compute.amazonaws.com:~/data
+
+
 #### SSH
 
 //Charger des fichiers de son ordi vers le serveur
 scp transactions_v2.csv dsluser12@52.174.126.36:~/Desktop/Kaggle2/data
 sudo scp dsluser12@52.174.126.36:~/Desktop/Kaggle2/Volley-2k15/LGBM_mini_up.csv ~/Documents/Machine\ Learning\ 1/
 Windows: scp dsluser12@52.174.126.36:~/Desktop/Kaggle2/Volley-2k15/xgb_0.csv ~/Desktop
-
-//Se connecter au serveur
-ssh dsluser12@52.174.126.36
-mdp: 5cZ4wE
-
-logout    //Se déconnecter
-
