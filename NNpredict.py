@@ -42,9 +42,15 @@ def create_model(optimizer='rmsprop', init='glorot_uniform'):
 model = KerasClassifier(build_fn=create_model, verbose=1)
 
 #%% Define th hyperparameters of the GridSearchCV 
-optimizers = ['adam']#,'rmsprop']
-init = ['glorot_uniform']#, 'normal', 'uniform']
-epochs = [20]#, 100, 150]
+
+
+
+
+
+optimizers = ['adam'] #, 'rmsprop']
+init = ['glorot_uniform'] #, 'normal', 'uniform']
+epochs = [10] #, 100, 150]
+
 batches = [1]
 param_grid = dict(optimizer=optimizers, epochs=epochs, batch_size=batches, init=init)
 
@@ -56,7 +62,7 @@ clf.fit(train, labels)
 bestParam = clf.best_params_
 
 print("Best Parameters: ",bestParam)
-dfg=open("param/bestParams_NN.txt",'w')
+dfg=open("param/bestParams_NN_mini.txt",'w')
 json.dump(bestParam,dfg)
 dfg.close()
 
@@ -76,4 +82,4 @@ predictions_NN = clf.predict(test)
 result = pd.DataFrame()
 result['id'] = range(len(predictions_NN))
 result['category'] = predictions_NN
-result.to_csv('Submissions/submit_nn_0.csv', index=False)
+result.to_csv('Submissions/submit_nn_mini.csv', index=False)

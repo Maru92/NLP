@@ -16,7 +16,11 @@ labels = labels.values
 print("Train classifier")
 
 # Set the parameters by cross-validation
-tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3], 'C': [3, 30]}, 
+
+ 
+
+tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3], 'C': [3]}, 
+
                     {'kernel': ['linear'], 'C': [3]}]
 
 clf = GridSearchCV(SVC(verbose=1), tuned_parameters, cv=5, scoring = 'f1', verbose=1)
@@ -25,7 +29,7 @@ clf.fit(train, labels)
 bestParam = clf.best_params_
 
 print("Best Parameters: ",bestParam)
-dfg=open("param/bestParams_SVC.txt",'w')
+dfg=open("param/bestParams_SVC_mini.txt",'w')
 json.dump(bestParam,dfg)
 dfg.close()
 
@@ -45,4 +49,4 @@ predictions_SVM = clf.predict(test)
 result = pd.DataFrame()
 result['id'] = range(len(predictions_SVM))
 result['category'] = predictions_SVM
-result.to_csv('Submissions/submit_svc_0.csv', index=False)
+result.to_csv('Submissions/submit_svc_mini.csv', index=False)
