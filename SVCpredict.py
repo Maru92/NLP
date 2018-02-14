@@ -49,4 +49,5 @@ predictions_SVM = clf.predict(test)
 result = pd.DataFrame()
 result['id'] = range(len(predictions_SVM))
 result['category'] = predictions_SVM
+result = result.astype(int)
 result.to_csv('Submissions/submit_svc_mini.csv', index=False)

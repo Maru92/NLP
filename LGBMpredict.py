@@ -2,12 +2,12 @@ import numpy as np
 import pandas as pd 
 import json
 
-#from sklearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline
 
 from lightgbm import LGBMClassifier
 
-#from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import f1_score
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import f1_score, make_scorer
 from sklearn.model_selection import train_test_split
 
 #from skopt import gp_minimize
@@ -112,30 +112,79 @@ def PRS(fun, dim, budget, lb, up):
 #res = gp_minimize(fun, [(1e-4, 1), (0,1), (0,1)], n_calls=10)
 
 #%%
-print("Start optimization with PRS")
-fun = Objective_Function(objective)
-PRS(fun, 3, 50, 0, 1)
+#print("Start optimization with PRS")
+#fun = Objective_Function(objective)
+#PRS(fun, 3, 50, 0, 1)
 
 #%%
-print("Best parameters found : ")
-# LightGBM params
+print("Start optimization with Exhaustive Search")
+
 lgb_params = {}
-lgb_params['learning_rate'] = fun.wbest[0]
-lgb_params['subsample'] = fun.wbest[1]
-lgb_params['colsample_bytree'] = fun.wbest[2] 
-lgb_params['silent'] = False
-lgb_params['seed'] = 555
-lgb_params['subsample_freq'] = 10  
+lgb_params['learning_rate'] = 0.02
+lgb_params['num_iterations'] = 10
+lgb_params['subsample'] = 0.8
+lgb_params['subsample_freq'] = 1
+lgb_params['colsample_bytree'] = 0.8
 
-dfg = open("param/bestParams1.txt",'w')
-json.dump(lgb_params,dfg)
+lgb_model = LGBMClassifier(**lgb_params)
+
+pipeline = Pipeline([
+    ('classifier', lgb_model)
+])
+    
+hyperparameters = { 'classifier__learning_rate': [0.02, 0.2],
+                    'classifier__num_iterations': [650,1100],
+                    'classifier__subsample': [0.7],
+                    'classifier__subsample_freq': [1,10],
+                    'classifier__colsample_bytree': [0.7,0.9],
+                    'classifier__silent': [False],
+                    'classifier__seed': [200],
+                    'classifier__num_leaves': [16,31],
+                    'classifier__max_depth': [-1, 4],
+                    'classifier__max_bin': [10, 255]
+                  }
+
+scoring = {'F1_score' : make_scorer(f1_score)}
+
+clf = GridSearchCV(pipeline, hyperparameters, cv = 5, scoring = scoring)
+
+ 
+# Fit and tune model
+clf.fit(train, labels)
+
+print("Refiting")
+
+#refitting on entire training data using best settings
+clf.refit
+
+bestParam = clf.best_params_
+
+dfg=open("param/bestParams_ES.txt",'w')
+json.dump(bestParam,dfg)
 dfg.close()
-print(lgb_params)
+
+print(bestParam)
 
 #%%
-print("Refit full model ... ")
-lgb_model = LGBMClassifier(**lgb_params)    
-lgb_model.fit(train, labels)
+#print("Best parameters found : ")
+## LightGBM params
+#lgb_params = {}
+#lgb_params['learning_rate'] = fun.wbest[0]
+#lgb_params['subsample'] = fun.wbest[1]
+#lgb_params['colsample_bytree'] = fun.wbest[2] 
+#lgb_params['silent'] = False
+#lgb_params['seed'] = 555
+#lgb_params['subsample_freq'] = 10  
+#
+#dfg = open("param/bestParams1.txt",'w')
+#json.dump(lgb_params,dfg)
+#dfg.close()
+#print(lgb_params)
+#
+##%%
+#print("Refit full model ... ")
+#lgb_model = LGBMClassifier(**lgb_params)    
+#lgb_model.fit(train, labels)
 
 #%%
 print("Import testset ... ")
@@ -147,7 +196,7 @@ test = test.values
 
 #%%
 print("Prediction ... ")
-y_pred = lgb_model.predict_proba(test)[:,1] 
+y_pred = clf.predict_proba(test)[:,1] 
 ind_0 = y_pred < 0.5
 ind_1 = np.logical_not(ind_0)
 y_pred[ind_0] = 0
@@ -158,5 +207,6 @@ print("Writing ... ")
 result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
-result.to_csv('Submissions/submit_lgbm.csv', index=False)
+result = result.astype(int)
+result.to_csv('Submissions/submit_lgbm_es.csv', index=False)
 

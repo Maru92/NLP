@@ -82,4 +82,5 @@ predictions_NN = clf.predict(test)
 result = pd.DataFrame()
 result['id'] = range(len(predictions_NN))
 result['category'] = predictions_NN
+result = result.astype(int)
 result.to_csv('Submissions/submit_nn_mini.csv', index=False)
