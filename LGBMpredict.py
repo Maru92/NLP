@@ -146,7 +146,7 @@ hyperparameters = { 'classifier__learning_rate': [0.02, 0.2],
 
 scoring = {'F1_score' : make_scorer(f1_score)}
 
-clf = GridSearchCV(pipeline, hyperparameters, cv = 5, scoring = scoring)
+clf = GridSearchCV(pipeline, hyperparameters, cv = 5, scoring = 'f1')
 
  
 # Fit and tune model
