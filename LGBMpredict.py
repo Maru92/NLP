@@ -138,14 +138,14 @@ hyperparameters = { 'classifier__learning_rate': sp_uniform(),
                     'classifier__subsample': sp_uniform(),
                     'classifier__subsample_freq': sp_randint(1, 11),
                     'classifier__colsample_bytree': sp_uniform(),
-                    'classifier__silent': [False],
+                    'classifier__silent': [True],
                     'classifier__seed': [555],
                     'classifier__num_leaves': sp_randint(10, 31),
                     'classifier__max_bin': sp_randint(10, 255)
                   }
 
 # run randomized search
-n_iter_search = 2
+n_iter_search = 50
 clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters,
                                    n_iter=n_iter_search, cv = 5, scoring='f1')
 
@@ -255,5 +255,5 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('Submissions/submit_lgbm_es.csv', index=False)
+result.to_csv('Submissions/submit_lgbm_PRS_50.csv', index=False)
 
