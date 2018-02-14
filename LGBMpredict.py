@@ -1,8 +1,3 @@
-import os
-print("old working dir",os.getcwd())
-os.chdir("C:\\Users\\Marc\\Desktop\\NLP\\NLP")
-print("new working dir",os.getcwd())
-#%%
 import numpy as np 
 import pandas as pd 
 import json
@@ -11,11 +6,11 @@ import json
 
 from lightgbm import LGBMClassifier
 
-from sklearn.model_selection import GridSearchCV
+#from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 
-from skopt import gp_minimize
+#from skopt import gp_minimize
 #import cma
 
 #%%
@@ -93,14 +88,33 @@ def objective(param):
     return 1-f1_score(y_test, y_pred)
 
 #%%
+def PRS(fun, dim, budget, lb, up):
+    eval = 1
+    x = (up - lb)* np.random.random_sample(dim) - lb
+    min_f = fun(x)
+    while eval < budget:
+        x = (up - lb)* np.random.random_sample(dim) - lb
+        feval = fun(x)
+        eval = eval +1 
+        if (feval < min_f):
+            min_f = feval
+
+    return min_f
+
+#%%
 #print("Start optimization with cma")
 #fun = Objective_Function(objective)
 #res = cma.fmin(fun, [1e-2,0.5,0.5], 1e-1, options={'maxfevals': 10})
 
 #%%
-print("Start optimization with gp_minimize")
+#print("Start optimization with gp_minimize")
+#fun = Objective_Function(objective)
+#res = gp_minimize(fun, [(1e-4, 1), (0,1), (0,1)], n_calls=10)
+
+#%%
+print("Start optimization with PRS")
 fun = Objective_Function(objective)
-res = gp_minimize(fun, [(1e-4, 1), (0,1), (0,1)], n_calls=10)
+PRS(fun, 3, 50, 0, 1)
 
 #%%
 print("Best parameters found : ")
@@ -113,18 +127,18 @@ lgb_params['silent'] = False
 lgb_params['seed'] = 555
 lgb_params['subsample_freq'] = 10  
 
-dfg = open("bestParams1.txt",'w')
+dfg = open("param/bestParams1.txt",'w')
 json.dump(lgb_params,dfg)
 dfg.close()
 print(lgb_params)
 
 #%%
-print("Refit full model")
+print("Refit full model ... ")
 lgb_model = LGBMClassifier(**lgb_params)    
 lgb_model.fit(train, labels)
 
 #%%
-print("Import testset")
+print("Import testset ... ")
 test = pd.read_csv('../data/test_fusion.csv', index_col=0)
 test = test.drop(drops, axis=1)
 
@@ -132,6 +146,7 @@ test = test.fillna(0)
 test = test.values
 
 #%%
+print("Prediction ... ")
 y_pred = lgb_model.predict_proba(test)[:,1] 
 ind_0 = y_pred < 0.5
 ind_1 = np.logical_not(ind_0)
@@ -139,6 +154,7 @@ y_pred[ind_0] = 0
 y_pred[ind_1] = 1
 
 #%%
+print("Writing ... ")
 result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
