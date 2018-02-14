@@ -6,9 +6,11 @@ from sklearn.pipeline import Pipeline
 
 from lightgbm import LGBMClassifier
 
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import f1_score, make_scorer
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
+from scipy.stats import randint as sp_randint
+from scipy.stats import uniform as sp_uniform
 
 #from skopt import gp_minimize
 #import cma
@@ -115,10 +117,8 @@ def PRS(fun, dim, budget, lb, up):
 #print("Start optimization with PRS")
 #fun = Objective_Function(objective)
 #PRS(fun, 3, 50, 0, 1)
-
+    
 #%%
-print("Start optimization with Exhaustive Search")
-
 lgb_params = {}
 lgb_params['learning_rate'] = 0.02
 lgb_params['num_iterations'] = 10
@@ -131,25 +131,24 @@ lgb_model = LGBMClassifier(**lgb_params)
 pipeline = Pipeline([
     ('classifier', lgb_model)
 ])
-    
-hyperparameters = { 'classifier__learning_rate': [0.02, 0.2],
-                    'classifier__num_iterations': [650,1100],
-                    'classifier__subsample': [0.7],
-                    'classifier__subsample_freq': [1,10],
-                    'classifier__colsample_bytree': [0.7,0.9],
+
+# specify parameters and distributions to sample from
+hyperparameters = { 'classifier__learning_rate': sp_uniform(),
+                    'classifier__num_iterations': sp_randint(700, 1301),
+                    'classifier__subsample': sp_uniform(),
+                    'classifier__subsample_freq': sp_randint(1, 11),
+                    'classifier__colsample_bytree': sp_uniform(),
                     'classifier__silent': [False],
-                    'classifier__seed': [200],
-                    'classifier__num_leaves': [16,31],
-                    'classifier__max_depth': [-1, 4],
-                    'classifier__max_bin': [10, 255]
+                    'classifier__seed': [555],
+                    'classifier__num_leaves': sp_randint(10, 31),
+                    'classifier__max_bin': sp_randint(10, 255)
                   }
 
-scoring = {'F1_score' : make_scorer(f1_score)}
+# run randomized search
+n_iter_search = 2
+clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters,
+                                   n_iter=n_iter_search, cv = 5, scoring='f1')
 
-clf = GridSearchCV(pipeline, hyperparameters, cv = 5, scoring = 'f1')
-
- 
-# Fit and tune model
 clf.fit(train, labels)
 
 print("Refiting")
@@ -159,11 +158,59 @@ clf.refit
 
 bestParam = clf.best_params_
 
-dfg=open("param/bestParams_ES.txt",'w')
+dfg=open("param/bestParams_PRS.txt",'w')
 json.dump(bestParam,dfg)
 dfg.close()
 
 print(bestParam)
+
+##%%
+#print("Start optimization with Exhaustive Search")
+#
+#lgb_params = {}
+#lgb_params['learning_rate'] = 0.02
+#lgb_params['num_iterations'] = 10
+#lgb_params['subsample'] = 0.8
+#lgb_params['subsample_freq'] = 1
+#lgb_params['colsample_bytree'] = 0.8
+#
+#lgb_model = LGBMClassifier(**lgb_params)
+#
+#pipeline = Pipeline([
+#    ('classifier', lgb_model)
+#])
+#    
+#hyperparameters = { 'classifier__learning_rate': [0.02, 0.2],
+#                    'classifier__num_iterations': [650,1100],
+#                    'classifier__subsample': [0.7],
+#                    'classifier__subsample_freq': [1,10],
+#                    'classifier__colsample_bytree': [0.7,0.9],
+#                    'classifier__silent': [False],
+#                    'classifier__seed': [200],
+#                    'classifier__num_leaves': [16,31],
+#                    'classifier__max_depth': [-1, 4],
+#                    'classifier__max_bin': [10, 255]
+#                  }
+#
+#
+#clf = GridSearchCV(pipeline, hyperparameters, cv = 5, scoring = 'f1')
+#
+# 
+## Fit and tune model
+#clf.fit(train, labels)
+#
+#print("Refiting")
+#
+##refitting on entire training data using best settings
+#clf.refit
+#
+#bestParam = clf.best_params_
+#
+#dfg=open("param/bestParams_ES.txt",'w')
+#json.dump(bestParam,dfg)
+#dfg.close()
+#
+#print(bestParam)
 
 #%%
 #print("Best parameters found : ")
