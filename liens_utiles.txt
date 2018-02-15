@@ -1,0 +1,8 @@
+### Compétition Kaggle Quora semblable : 
+https://www.kaggle.com/c/quora-question-pairs/discussion/34355
+
+### Papiers Graphs
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.221.3857&rep=rep1&type=pdf
+
+##Networkx documentation
+https://networkx.github.io/documentation/networkx-1.10/reference/algorithms.html
