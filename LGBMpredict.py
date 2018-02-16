@@ -5,6 +5,7 @@ import json
 from sklearn.pipeline import Pipeline
 
 from lightgbm import LGBMClassifier
+from xgboost import XGBClassifier
 
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.metrics import f1_score
@@ -128,33 +129,58 @@ def PRS(fun, dim, budget, lb, up):
 #PRS(fun, 3, 50, 0, 1)
     
 #%%
-lgb_params = {}
-lgb_params['learning_rate'] = 0.02
-lgb_params['num_iterations'] = 10
-lgb_params['subsample'] = 0.8
-lgb_params['subsample_freq'] = 1
-lgb_params['colsample_bytree'] = 0.8
+#lgb_params = {}
+#lgb_params['learning_rate'] = 0.02
+#lgb_params['num_iterations'] = 10
+#lgb_params['subsample'] = 0.8
+#lgb_params['subsample_freq'] = 1
+#lgb_params['colsample_bytree'] = 0.8
+#
+#lgb_model = LGBMClassifier(**lgb_params)
+#
+#pipeline = Pipeline([
+#    ('classifier', lgb_model)
+#])
 
-lgb_model = LGBMClassifier(**lgb_params)
+xgb_params = {}
+xgb_params['n_estimators'] = 512
+xgb_params['max_depth'] = 6
+xgb_params['subsample'] = 0.9
+xgb_params['scale_pos_weight'] = 0.8366365291081073
+
+xgb_model = XGBClassifier(**xgb_params)
 
 pipeline = Pipeline([
-    ('classifier', lgb_model)
+    ('classifier', xgb_model)
 ])
+    
+hyperparameters_xgb = { 'classifier__eta': sp_uniform(loc=0.0, scale=0.6),  
+                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),  
+                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),  
+                    'classifier__colsample_bylevel': sp_uniform(loc=0.3, scale=0.7), 
+                    'classifier__scale_pos_weight': sp_uniform(loc=0.7, scale=0.6),  
+                    'classifier__max_depth': sp_randint(1, 10),   
+                    'classifier__silent': [0],  
+                    'classifier__seed': [555],  
+                    'classifier__max_bin': sp_randint(100, 256),  
+                    'classifier__n_estimator': sp_randint(500, 1101)  
+                  }
+#lambda, alpha
 
 # specify parameters and distributions to sample from
-hyperparameters = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.5),
-                    'classifier__num_iterations': sp_randint(800, 1101),
-                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),
-                    'classifier__subsample_freq': sp_randint(1, 8),
-                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),
-                    'classifier__silent': [False],
-                    'classifier__seed': [555],
-                    'classifier__num_leaves': sp_randint(10, 31),
-                    'classifier__max_bin': sp_randint(100, 255)
-                  }
+#hyperparameters_lgbm = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.5),
+#                    'classifier__num_iterations': sp_randint(800, 1101),
+#                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),
+#                    'classifier__subsample_freq': sp_randint(1, 8),
+#                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),
+#                    'classifier__silent': [False],
+#                    'classifier__seed': [555],
+#                    'classifier__num_leaves': sp_randint(10, 31),
+#                    'classifier__max_bin': sp_randint(100, 255)
+#                  }
 
 
-#best_hyperparameters = {'classifier__colsample_bytree': 0.57468972960190079,
+#best_hyperparameters_lgbm = {'classifier__colsample_bytree': 0.57468972960190079,
 #                        'classifier__num_iterations': 871,
 #                        'classifier__seed': 555,
 #                        'classifier__num_leaves': 13,
@@ -165,39 +191,38 @@ hyperparameters = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.5),
 #                        'classifier__silent': True}
 
 
-best_hyperparameters_2 = {'silent': False, 
-                          'subsample_freq': 4, 
-                          'learning_rate': 0.024122807580160777, 
-                          'max_bin': 237, 
-                          'subsample': 0.81014788456650577, 
-                          'colsample_bytree': 0.57783657143646716,               
-                          'seed': 555, 
-                          'num_leaves': 25, 
-                          'num_iterations': 960}
+#best_hyperparameters_lgbm_2 = {'silent': False, 
+#                          'subsample_freq': 4, 
+#                          'learning_rate': 0.024122807580160777, 
+#                          'max_bin': 237, 
+#                          'subsample': 0.81014788456650577, 
+#                          'colsample_bytree': 0.57783657143646716,               
+#                          'seed': 555, 
+#                          'num_leaves': 25, 
+#                          'num_iterations': 960}
 
-lgb_model = LGBMClassifier(**best_hyperparameters_2)    
-lgb_model.fit(X_train, y_train)
-
+#lgb_model = LGBMClassifier(**best_hyperparameters_2)    
+#lgb_model.fit(X_train, y_train)
 
 # run randomized search
-#n_iter_search = 10
-#clf = RandomizedSearchCV(pipeline, param_distributions=best_hyperparameters_2,
-#                                   n_iter=n_iter_search, cv = 5, scoring='f1')
-#
-#clf.fit(train, labels)
+n_iter_search = 1
+clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters_xgb,
+                                   n_iter=n_iter_search, cv = 5, scoring='f1')
+
+clf.fit(train, labels)
 
 print("Refiting")
 
 #refitting on entire training data using best settings
-#clf.refit
-#
-#bestParam = clf.best_params_
-#
-#dfg=open("../data/param/bestParams_PRS_10.txt",'w')
-#json.dump(bestParam,dfg)
-#dfg.close()
-#
-#print(bestParam)
+clf.refit
+
+bestParam = clf.best_params_
+
+dfg=open("../data/param/bestParams_xgb_PRS_1.txt",'w')
+json.dump(bestParam,dfg)
+dfg.close()
+
+print(bestParam)
 
 # TODO 
 #a = clf.feature_importances_
@@ -282,8 +307,8 @@ test = test[features].values
 
 #%%
 print("Prediction ... ")
-y_pred = lgb_model.predict_proba(test)[:,1] 
-#y_pred = clf.predict_proba(test)[:,1] 
+#y_pred = lgb_model.predict_proba(test)[:,1] 
+y_pred = clf.predict_proba(test)[:,1] 
 median = np.median(y_pred)
 ind_0_median = y_pred < median
 ind_0 = y_pred < 0.5
@@ -302,11 +327,11 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('../data/Submissions/submit_lgbm_PRS_10.csv', index=False)
+result.to_csv('../data/Submissions/submit_xgb_PRS_1.csv', index=False)
 
 result_median = pd.DataFrame()
 result_median['id'] = range(len(y_pred_median))
 result_median['category'] = y_pred_median
 result_median = result.astype(int)
-result_median.to_csv('../data/Submissions/submit_lgbm_PRS_10_median.csv', index=False)
+result_median.to_csv('../data/Submissions/submit_xgb_PRS_1_median.csv', index=False)
 
