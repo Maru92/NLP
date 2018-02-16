@@ -165,9 +165,20 @@ hyperparameters = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.5),
 #                        'classifier__silent': True}
 
 
+best_hyperparameters_2 = {'classifier__silent': False, 
+                          'classifier__subsample_freq': 4, 
+                          'classifier__learning_rate': 0.024122807580160777, 
+                          'classifier__max_bin': 237, 
+                          'classifier__subsample': 0.81014788456650577, 
+                          'classifier__colsample_bytree': 0.57783657143646716,               
+                          'classifier__seed': 555, 
+                          'classifier__num_leaves': 25, 
+                          'classifier__num_iterations': 960}
+
+
 # run randomized search
 n_iter_search = 10
-clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters,
+clf = RandomizedSearchCV(pipeline, param_distributions=best_hyperparameters_2,
                                    n_iter=n_iter_search, cv = 5, scoring='f1')
 
 clf.fit(train, labels)
@@ -186,8 +197,8 @@ dfg.close()
 print(bestParam)
 
 # TODO 
-a = clf.feature_importances_
-print("Features Importance:  ",a/np.sum(a))
+#a = clf.feature_importances_
+#print("Features Importance:  ",a/np.sum(a))
 
 
 ##%%
