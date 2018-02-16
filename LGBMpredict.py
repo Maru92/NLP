@@ -154,7 +154,7 @@ pipeline = Pipeline([
     ('classifier', xgb_model)
 ])
     
-hyperparameters_xgb = { 'classifier__eta': sp_uniform(loc=0.0, scale=0.6),  
+hyperparameters_xgb = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.6),  
                     'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),  
                     'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),  
                     'classifier__colsample_bylevel': sp_uniform(loc=0.3, scale=0.7), 
