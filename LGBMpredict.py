@@ -144,9 +144,9 @@ pipeline = Pipeline([
 # specify parameters and distributions to sample from
 hyperparameters = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.5),
                     'classifier__num_iterations': sp_randint(800, 1101),
-                    'classifier__subsample': sp_uniform(loc=0.5, scale=1.0),
+                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),
                     'classifier__subsample_freq': sp_randint(1, 8),
-                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=1),
+                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),
                     'classifier__silent': [False],
                     'classifier__seed': [555],
                     'classifier__num_leaves': sp_randint(10, 31),
