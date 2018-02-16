@@ -204,7 +204,7 @@ hyperparameters_xgb = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0
 #lgb_model.fit(X_train, y_train)
 
 # run randomized search
-n_iter_search = 1
+n_iter_search = 25
 clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters_xgb,
                                    n_iter=n_iter_search, cv = 5, scoring='f1')
 
@@ -217,7 +217,7 @@ clf.refit
 
 bestParam = clf.best_params_
 
-dfg=open("../data/param/bestParams_xgb_PRS_1.txt",'w')
+dfg=open("../data/param/bestParams_xgb_PRS_25.txt",'w')
 json.dump(bestParam,dfg)
 dfg.close()
 
@@ -326,11 +326,11 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('../data/Submissions/submit_xgb_PRS_1.csv', index=False)
+result.to_csv('../data/Submissions/submit_xgb_PRS_25.csv', index=False)
 
 result_median = pd.DataFrame()
 result_median['id'] = range(len(y_pred_median))
 result_median['category'] = y_pred_median
 result_median = result.astype(int)
-result_median.to_csv('../data/Submissions/submit_xgb_PRS_1_median.csv', index=False)
+result_median.to_csv('../data/Submissions/submit_xgb_PRS_25_median.csv', index=False)
 
