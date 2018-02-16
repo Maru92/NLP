@@ -12,23 +12,32 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import randint as sp_randint
 from scipy.stats import uniform as sp_uniform
 
-#from skopt import gp_minimize
-#import cma
+from skopt import gp_minimize
+import cma
 
 #%%
 print("Import trainset ...")
-drops = ["Title_target","Authors_target","Journal_target","Abstract_target","Title_source","Authors_source","Journal_source","Abstract_source"]
+features = ['Overlap_title', 'Common_authors', 'Date_diff', 'Overlap_abstract', 
+            'Tfidf_cosine_abstracts_nolim', 'Tfidf_cosine_titles', 'Tfidf_abstracts_(1,2)',
+         'Target_degree',
+       'Target_nh_subgraph_edges', 'Target_nh_subgraph_edges_plus',
+       'Source_degree', 'Source_nh_subgraph_edges',
+       'Source_nh_subgraph_edges_plus', 'Preferential attachment', 'Target_core', 'Target_clustering', 'Target_pagerank', 'Source_core',
+       'Source_clustering', 'Source_pagerank', 'Common_friends',
+       'Total_friends', 'Friends_measure', 'Sub_nh_edges', 'Sub_nh_edges_plus',
+       'Len_path',
+       'Both',
+       'Common_authors_prop','Overlap_journal','WMD_abstract','WMD_title','Common_title_prop'
+       ]
+#,'Tfidf_abstracts_chars_1,4','Tfidf_abstracts_chars_1,5', 'Jaccard', 'GRU_Siamois', 'CNN_Siamois'
 
-train = pd.read_csv('../data/train_fusion.csv', index_col=0)
-train = train.drop(drops, axis=1)
+train = pd.read_csv('../data/train_fusion_15_02.csv', index_col=0)
 
 #%%
-labels = train['label']
-train = train.drop(['label'], axis=1)
+labels = train['Edge'].values
 
 train = train.fillna(0)
-train = train.values
-labels = labels.values
+train = train[features].values
 
 
 N_features = train.shape[1]
@@ -144,8 +153,20 @@ hyperparameters = { 'classifier__learning_rate': sp_uniform(),
                     'classifier__max_bin': sp_randint(10, 255)
                   }
 
+
+#best_hyperparameters = {'classifier__colsample_bytree': 0.57468972960190079,
+#                        'classifier__num_iterations': 871,
+#                        'classifier__seed': 555,
+#                        'classifier__num_leaves': 13,
+#                        'classifier__subsample_freq': 4,
+#                        'classifier__max_bin': 151,
+#                        'classifier__learning_rate': 0.06799110856925239,
+#                        'classifier__subsample': 0.73288363562623562627079,
+#                        'classifier__silent': True}
+
+
 # run randomized search
-n_iter_search = 50
+n_iter_search = 40
 clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters,
                                    n_iter=n_iter_search, cv = 5, scoring='f1')
 
@@ -158,11 +179,16 @@ clf.refit
 
 bestParam = clf.best_params_
 
-dfg=open("param/bestParams_PRS.txt",'w')
+dfg=open("../data/param/bestParams_PRS_40.txt",'w')
 json.dump(bestParam,dfg)
 dfg.close()
 
 print(bestParam)
+
+# TODO 
+a = clf.feature_importances_
+print("Features Importance:  ",a/np.sum(a))
+
 
 ##%%
 #print("Start optimization with Exhaustive Search")
@@ -235,19 +261,25 @@ print(bestParam)
 
 #%%
 print("Import testset ... ")
-test = pd.read_csv('../data/test_fusion.csv', index_col=0)
-test = test.drop(drops, axis=1)
+test = pd.read_csv('../data/test_fusion_15_02.csv', index_col=0)
 
 test = test.fillna(0)
-test = test.values
+test = test[features].values
 
 #%%
 print("Prediction ... ")
 y_pred = clf.predict_proba(test)[:,1] 
+median = np.median(y_pred)
+ind_0_median = y_pred < median
 ind_0 = y_pred < 0.5
 ind_1 = np.logical_not(ind_0)
+ind_1_median = np.logical_not(ind_0_median)
 y_pred[ind_0] = 0
 y_pred[ind_1] = 1
+
+y_pred_median = np.zeros(len(y_pred))
+y_pred_median[ind_0_median] = 0
+y_pred_median[ind_1_median] = 1
 
 #%%
 print("Writing ... ")
@@ -255,5 +287,11 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('Submissions/submit_lgbm_PRS_50.csv', index=False)
+result.to_csv('../data/Submissions/submit_lgbm_PRS_50.csv', index=False)
+
+result_median = pd.DataFrame()
+result_median['id'] = range(len(y_pred_median))
+result_median['category'] = y_pred_median
+result_median = result.astype(int)
+result_median.to_csv('../data/Submissions/submit_lgbm_PRS_50_median.csv', index=False)
 

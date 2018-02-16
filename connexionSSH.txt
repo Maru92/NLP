@@ -1,6 +1,6 @@
 ﻿#### nohup
 
-nohup python SVCpredict.py > logs/SVC_train_mini.txt 2> logs/erreurs_SVC_mini.log &
+nohup python LGBMpredict.py > logs/LGBM_train.txt 2> logs/erreurs_LGBM.log &
 nohup python NNpredict.py > logs/NN_train_mini.txt 2> logs/erreurs_NN_mini.log &
 
 ps -ef |grep nohup
@@ -15,8 +15,8 @@ mdp: X0yyfu
 
 //Charger des fichiers de son ordi vers le serveur
 scp train_fusion.csv dsluser81@13.81.203.35:~/data/
-sudo scp dsluser81@13.81.203.35:~/NLP/Submissions/LGBM_mini_up.csv ~/Documents/Machine\ Learning\ 1/
-Windows: scp dsluser81@13.81.203.35:~/NLP/Submissions/xgb_0.csv ~/Desktop
+sudo scp dsluser81@13.81.203.35:~/NLP/Submissions/submit_lgbm_prs.csv ~/Documents/Machine\ Learning\ 1/
+Windows: scp dsluser81@13.81.203.35:~/NLP/Submissions/submit_lgbm_PRS_50.csv ~/Desktop
 
 
 #### GIT
@@ -33,3 +33,4 @@ git add .
 git commit -a
 
 git push    //Pusher les MAJ
+
