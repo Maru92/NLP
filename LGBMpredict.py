@@ -142,15 +142,15 @@ pipeline = Pipeline([
 ])
 
 # specify parameters and distributions to sample from
-hyperparameters = { 'classifier__learning_rate': sp_uniform(),
-                    'classifier__num_iterations': sp_randint(700, 1301),
-                    'classifier__subsample': sp_uniform(),
-                    'classifier__subsample_freq': sp_randint(1, 11),
-                    'classifier__colsample_bytree': sp_uniform(),
-                    'classifier__silent': [True],
+hyperparameters = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.5),
+                    'classifier__num_iterations': sp_randint(800, 1101),
+                    'classifier__subsample': sp_uniform(loc=0.5, scale=1.0),
+                    'classifier__subsample_freq': sp_randint(1, 8),
+                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=1),
+                    'classifier__silent': [False],
                     'classifier__seed': [555],
                     'classifier__num_leaves': sp_randint(10, 31),
-                    'classifier__max_bin': sp_randint(10, 255)
+                    'classifier__max_bin': sp_randint(100, 255)
                   }
 
 
@@ -166,7 +166,7 @@ hyperparameters = { 'classifier__learning_rate': sp_uniform(),
 
 
 # run randomized search
-n_iter_search = 40
+n_iter_search = 10
 clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters,
                                    n_iter=n_iter_search, cv = 5, scoring='f1')
 
@@ -179,7 +179,7 @@ clf.refit
 
 bestParam = clf.best_params_
 
-dfg=open("../data/param/bestParams_PRS_40.txt",'w')
+dfg=open("../data/param/bestParams_PRS_10.txt",'w')
 json.dump(bestParam,dfg)
 dfg.close()
 
@@ -287,11 +287,11 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('../data/Submissions/submit_lgbm_PRS_50.csv', index=False)
+result.to_csv('../data/Submissions/submit_lgbm_PRS_10.csv', index=False)
 
 result_median = pd.DataFrame()
 result_median['id'] = range(len(y_pred_median))
 result_median['category'] = y_pred_median
 result_median = result.astype(int)
-result_median.to_csv('../data/Submissions/submit_lgbm_PRS_50_median.csv', index=False)
+result_median.to_csv('../data/Submissions/submit_lgbm_PRS_10_median.csv', index=False)
 
