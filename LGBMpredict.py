@@ -175,26 +175,29 @@ best_hyperparameters_2 = {'classifier__silent': False,
                           'classifier__num_leaves': 25, 
                           'classifier__num_iterations': 960}
 
+lgb_model = LGBMClassifier(**best_hyperparameters_2)    
+lgb_model.fit(X_train, y_train)
+
 
 # run randomized search
-n_iter_search = 10
-clf = RandomizedSearchCV(pipeline, param_distributions=best_hyperparameters_2,
-                                   n_iter=n_iter_search, cv = 5, scoring='f1')
-
-clf.fit(train, labels)
+#n_iter_search = 10
+#clf = RandomizedSearchCV(pipeline, param_distributions=best_hyperparameters_2,
+#                                   n_iter=n_iter_search, cv = 5, scoring='f1')
+#
+#clf.fit(train, labels)
 
 print("Refiting")
 
 #refitting on entire training data using best settings
-clf.refit
-
-bestParam = clf.best_params_
-
-dfg=open("../data/param/bestParams_PRS_10.txt",'w')
-json.dump(bestParam,dfg)
-dfg.close()
-
-print(bestParam)
+#clf.refit
+#
+#bestParam = clf.best_params_
+#
+#dfg=open("../data/param/bestParams_PRS_10.txt",'w')
+#json.dump(bestParam,dfg)
+#dfg.close()
+#
+#print(bestParam)
 
 # TODO 
 #a = clf.feature_importances_
@@ -279,7 +282,8 @@ test = test[features].values
 
 #%%
 print("Prediction ... ")
-y_pred = clf.predict_proba(test)[:,1] 
+y_pred = lgb_model.predict_proba(test)[:,1] 
+#y_pred = clf.predict_proba(test)[:,1] 
 median = np.median(y_pred)
 ind_0_median = y_pred < median
 ind_0 = y_pred < 0.5
