@@ -162,7 +162,6 @@ hyperparameters_xgb = { 'classifier__eta': sp_uniform(loc=0.0, scale=0.6),
                     'classifier__max_depth': sp_randint(1, 10),   
                     'classifier__silent': [0],  
                     'classifier__seed': [555],  
-                    'classifier__max_bin': sp_randint(100, 256),  
                     'classifier__n_estimators': sp_randint(500, 1101)  
                   }
 #lambda, alpha
