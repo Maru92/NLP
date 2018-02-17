@@ -122,7 +122,7 @@ def PRS(fun, dim, budget, lb, up):
 #%%
 print("Start optimization with gp_minimize")
 fun = Objective_Function(objective_lgbm)
-res = gp_minimize(fun, [(1e-4, 0.15), (0.7,1.0), (0.4,1)], n_calls=10)
+res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1)], n_calls=200)
 
 #%%
 #print("Start optimization with PRS")
@@ -289,7 +289,7 @@ lgb_params['seed'] = 555
 lgb_params['subsample_freq'] = 4
 lgb_params['num_iterations'] = 950 
 
-dfg = open("../data/param/bestParams_lgbm_BO_2.txt",'w')
+dfg = open("../data/param/bestParams_lgbm_BO_200.txt",'w')
 json.dump(lgb_params,dfg)
 dfg.close()
 print(lgb_params)
@@ -328,11 +328,11 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('../data/Submissions/submit_lgbm_BO_2.csv', index=False)
+result.to_csv('../data/Submissions/submit_lgbm_BO_200.csv', index=False)
 
 result_median = pd.DataFrame()
 result_median['id'] = range(len(y_pred_median))
 result_median['category'] = y_pred_median
 result_median = result.astype(int)
-result_median.to_csv('../data/Submissions/submit_lgbm_BO_2_median.csv', index=False)
+result_median.to_csv('../data/Submissions/submit_lgbm_BO_200_median.csv', index=False)
 
