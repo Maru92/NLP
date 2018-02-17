@@ -14,9 +14,9 @@ ssh dsluser81@13.81.203.35
 mdp: X0yyfu
 
 //Charger des fichiers de son ordi vers le serveur
-scp train_fusion.csv dsluser81@13.81.203.35:~/data/
-sudo scp dsluser81@13.81.203.35:~/NLP/Submissions/submit_lgbm_prs.csv ~/Documents/Machine\ Learning\ 1/
-Windows: scp dsluser81@13.81.203.35:~/NLP/Submissions/submit_lgbm_PRS_50.csv ~/Desktop
+scp train_fusion_15_02.csv dsluser81@13.81.203.35:~/data/
+sudo scp dsluser81@13.81.203.35:~/data/Submissions/submit_lgbm_PRS_10.csv ~/Documents/Machine\ Learning\ 1/
+Windows: scp dsluser81@13.81.203.35:~/data/Submissions/submit_lgbm_PRS_10_median.csv ~/Desktop
 
 
 #### GIT

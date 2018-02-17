@@ -78,14 +78,15 @@ class Objective_Function(object):
         return f
 
 #%%
-def objective(param):
+def objective_lgbm(param):
     lgb_params = {}
     lgb_params['learning_rate'] = param[0]
     lgb_params['subsample'] = param[1]
     lgb_params['colsample_bytree'] = param[2] 
     lgb_params['silent'] = False
     lgb_params['seed'] = 555
-    lgb_params['subsample_freq'] = 10 #Try different
+    lgb_params['subsample_freq'] = 4
+    lgb_params['num_iterations'] = 950
     
     lgb_model = LGBMClassifier(**lgb_params)    
     lgb_model.fit(X_train, y_train)
@@ -119,9 +120,9 @@ def PRS(fun, dim, budget, lb, up):
 #res = cma.fmin(fun, [1e-2,0.5,0.5], 1e-1, options={'maxfevals': 10})
 
 #%%
-#print("Start optimization with gp_minimize")
-#fun = Objective_Function(objective)
-#res = gp_minimize(fun, [(1e-4, 1), (0,1), (0,1)], n_calls=10)
+print("Start optimization with gp_minimize")
+fun = Objective_Function(objective_lgbm)
+res = gp_minimize(fun, [(1e-4, 0.15), (0.7,1.0), (0.4,1)], n_calls=10)
 
 #%%
 #print("Start optimization with PRS")
@@ -142,28 +143,28 @@ def PRS(fun, dim, budget, lb, up):
 #    ('classifier', lgb_model)
 #])
 
-xgb_params = {}
-xgb_params['n_estimators'] = 512
-xgb_params['max_depth'] = 6
-xgb_params['subsample'] = 0.9
-xgb_params['scale_pos_weight'] = 0.8366365291081073
-
-xgb_model = XGBClassifier(**xgb_params)
-
-pipeline = Pipeline([
-    ('classifier', xgb_model)
-])
-    
-hyperparameters_xgb = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.6),  
-                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),  
-                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),  
-                    'classifier__colsample_bylevel': sp_uniform(loc=0.3, scale=0.7), 
-                    'classifier__scale_pos_weight': sp_uniform(loc=0.7, scale=0.6),  
-                    'classifier__max_depth': sp_randint(1, 10),   
-                    'classifier__silent': [0],  
-                    'classifier__seed': [555],  
-                    'classifier__n_estimators': sp_randint(500, 1101)  
-                  }
+#xgb_params = {}
+#xgb_params['n_estimators'] = 512
+#xgb_params['max_depth'] = 6
+#xgb_params['subsample'] = 0.9
+#xgb_params['scale_pos_weight'] = 0.8366365291081073
+#
+#xgb_model = XGBClassifier(**xgb_params)
+#
+#pipeline = Pipeline([
+#    ('classifier', xgb_model)
+#])
+#    
+#hyperparameters_xgb = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.6),  
+#                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),  
+#                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),  
+#                    'classifier__colsample_bylevel': sp_uniform(loc=0.3, scale=0.7), 
+#                    'classifier__scale_pos_weight': sp_uniform(loc=0.7, scale=0.6),  
+#                    'classifier__max_depth': sp_randint(1, 10),   
+#                    'classifier__silent': [0],  
+#                    'classifier__seed': [555],  
+#                    'classifier__n_estimators': sp_randint(500, 1101)  
+#                  }
 #lambda, alpha
 
 # specify parameters and distributions to sample from
@@ -204,24 +205,24 @@ hyperparameters_xgb = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0
 #lgb_model.fit(X_train, y_train)
 
 # run randomized search
-n_iter_search = 25
-clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters_xgb,
-                                   n_iter=n_iter_search, cv = 5, scoring='f1')
-
-clf.fit(train, labels)
-
-print("Refiting")
-
-#refitting on entire training data using best settings
-clf.refit
-
-bestParam = clf.best_params_
-
-dfg=open("../data/param/bestParams_xgb_PRS_25.txt",'w')
-json.dump(bestParam,dfg)
-dfg.close()
-
-print(bestParam)
+#n_iter_search = 25
+#clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters_xgb,
+#                                   n_iter=n_iter_search, cv = 5, scoring='f1')
+#
+#clf.fit(train, labels)
+#
+#print("Refiting")
+#
+##refitting on entire training data using best settings
+#clf.refit
+#
+#bestParam = clf.best_params_
+#
+#dfg=open("../data/param/bestParams_xgb_PRS_25.txt",'w')
+#json.dump(bestParam,dfg)
+#dfg.close()
+#
+#print(bestParam)
 
 # TODO 
 #a = clf.feature_importances_
@@ -277,25 +278,26 @@ print(bestParam)
 #print(bestParam)
 
 #%%
-#print("Best parameters found : ")
-## LightGBM params
-#lgb_params = {}
-#lgb_params['learning_rate'] = fun.wbest[0]
-#lgb_params['subsample'] = fun.wbest[1]
-#lgb_params['colsample_bytree'] = fun.wbest[2] 
-#lgb_params['silent'] = False
-#lgb_params['seed'] = 555
-#lgb_params['subsample_freq'] = 10  
-#
-#dfg = open("param/bestParams1.txt",'w')
-#json.dump(lgb_params,dfg)
-#dfg.close()
-#print(lgb_params)
-#
-##%%
-#print("Refit full model ... ")
-#lgb_model = LGBMClassifier(**lgb_params)    
-#lgb_model.fit(train, labels)
+print("Best parameters found : ")
+# LightGBM params
+lgb_params = {}
+lgb_params['learning_rate'] = fun.wbest[0]
+lgb_params['subsample'] = fun.wbest[1]
+lgb_params['colsample_bytree'] = fun.wbest[2] 
+lgb_params['silent'] = False
+lgb_params['seed'] = 555
+lgb_params['subsample_freq'] = 4
+lgb_params['num_iterations'] = 950 
+
+dfg = open("../data/param/bestParams_lgbm_BO_2.txt",'w')
+json.dump(lgb_params,dfg)
+dfg.close()
+print(lgb_params)
+
+#%%
+print("Refit full model ... ")
+lgb_model = LGBMClassifier(**lgb_params)    
+lgb_model.fit(train, labels)
 
 #%%
 print("Import testset ... ")
@@ -306,8 +308,8 @@ test = test[features].values
 
 #%%
 print("Prediction ... ")
-#y_pred = lgb_model.predict_proba(test)[:,1] 
-y_pred = clf.predict_proba(test)[:,1] 
+y_pred = lgb_model.predict_proba(test)[:,1] 
+#y_pred = clf.predict_proba(test)[:,1] 
 median = np.median(y_pred)
 ind_0_median = y_pred < median
 ind_0 = y_pred < 0.5
@@ -326,11 +328,11 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('../data/Submissions/submit_xgb_PRS_25.csv', index=False)
+result.to_csv('../data/Submissions/submit_lgbm_BO_2.csv', index=False)
 
 result_median = pd.DataFrame()
 result_median['id'] = range(len(y_pred_median))
 result_median['category'] = y_pred_median
 result_median = result.astype(int)
-result_median.to_csv('../data/Submissions/submit_xgb_PRS_25_median.csv', index=False)
+result_median.to_csv('../data/Submissions/submit_lgbm_BO_2_median.csv', index=False)
 
