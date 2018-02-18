@@ -20,19 +20,17 @@ import cma
 print("Import trainset ...")
 features = ['Overlap_title', 'Common_authors', 'Date_diff', 'Overlap_abstract', 
             'Tfidf_cosine_abstracts_nolim', 'Tfidf_cosine_titles', 'Tfidf_abstracts_(1,2)',
-         'Target_degree',
-       'Target_nh_subgraph_edges', 'Target_nh_subgraph_edges_plus',
-       'Source_degree', 'Source_nh_subgraph_edges',
-       'Source_nh_subgraph_edges_plus', 'Preferential attachment', 'Target_core', 'Target_clustering', 'Target_pagerank', 'Source_core',
-       'Source_clustering', 'Source_pagerank', 'Common_friends',
-       'Total_friends', 'Friends_measure', 'Sub_nh_edges', 'Sub_nh_edges_plus',
-       'Len_path',
-       'Both',
-       'Common_authors_prop','Overlap_journal','WMD_abstract','WMD_title','Common_title_prop'
+         'Target_degree', 'Target_nh_subgraph_edges', 'Target_nh_subgraph_edges_plus',
+       'Source_degree', 'Source_nh_subgraph_edges','Source_nh_subgraph_edges_plus', 
+       'Preferential attachment', 'Target_core', 'Target_clustering', 'Target_pagerank', 'Source_core',
+       'Source_clustering', 'Source_pagerank', 'Common_friends', 'Total_friends', 'Friends_measure', 
+       'Sub_nh_edges', 'Sub_nh_edges_plus','Len_path', 'Both',
+       'Common_authors_prop','Overlap_journal','WMD_abstract','WMD_title','Common_title_prop',
+       'Tfidf_abstract_(1,3)', 'Tfidf_abstract_(1,4)', 'Tfidf_abstract_(1,5)'
        ]
 #,'Tfidf_abstracts_chars_1,4','Tfidf_abstracts_chars_1,5', 'Jaccard', 'GRU_Siamois', 'CNN_Siamois'
 
-train = pd.read_csv('../data/train_fusion_15_02.csv', index_col=0)
+train = pd.read_csv('../data/train_18_02.csv', index_col=0)
 
 #%%
 labels = train['Edge'].values
@@ -83,6 +81,8 @@ def objective_lgbm(param):
     lgb_params['learning_rate'] = param[0]
     lgb_params['subsample'] = param[1]
     lgb_params['colsample_bytree'] = param[2] 
+    lgb_params['lambda_l1'] = param[3]
+    lgb_params['lambda_l2'] = param[4]
     lgb_params['silent'] = False
     lgb_params['seed'] = 555
     lgb_params['subsample_freq'] = 4
@@ -117,31 +117,31 @@ def PRS(fun, dim, budget, lb, up):
 #%%
 #print("Start optimization with cma")
 #fun = Objective_Function(objective)
-#res = cma.fmin(fun, [1e-2,0.5,0.5], 1e-1, options={'maxfevals': 10})
+#res = cma.fmin(fun, [1e-2,0.5,0.5,0.1,0.1], 1e-1, options={'maxfevals': 10})
 
 #%%
-print("Start optimization with gp_minimize")
-fun = Objective_Function(objective_lgbm)
-res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1)], n_calls=200)
+#print("Start optimization with gp_minimize")
+#fun = Objective_Function(objective_lgbm)
+#res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1), (0.0,3.0), (0.0,3.0)], n_calls=200)
 
 #%%
 #print("Start optimization with PRS")
 #fun = Objective_Function(objective)
-#PRS(fun, 3, 50, 0, 1)
+#PRS(fun, 5, 50, 0, 1)
     
 #%%
-#lgb_params = {}
-#lgb_params['learning_rate'] = 0.02
-#lgb_params['num_iterations'] = 10
-#lgb_params['subsample'] = 0.8
-#lgb_params['subsample_freq'] = 1
-#lgb_params['colsample_bytree'] = 0.8
-#
-#lgb_model = LGBMClassifier(**lgb_params)
-#
-#pipeline = Pipeline([
-#    ('classifier', lgb_model)
-#])
+lgb_params = {}
+lgb_params['learning_rate'] = 0.02
+lgb_params['num_iterations'] = 10
+lgb_params['subsample'] = 0.8
+lgb_params['subsample_freq'] = 1
+lgb_params['colsample_bytree'] = 0.8
+
+lgb_model = LGBMClassifier(**lgb_params)
+
+pipeline = Pipeline([
+    ('classifier', lgb_model)
+])
 
 #xgb_params = {}
 #xgb_params['n_estimators'] = 512
@@ -168,16 +168,18 @@ res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1)], n_calls=200)
 #lambda, alpha
 
 # specify parameters and distributions to sample from
-#hyperparameters_lgbm = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.5),
-#                    'classifier__num_iterations': sp_randint(800, 1101),
-#                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),
-#                    'classifier__subsample_freq': sp_randint(1, 8),
-#                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),
-#                    'classifier__silent': [False],
-#                    'classifier__seed': [555],
-#                    'classifier__num_leaves': sp_randint(10, 31),
-#                    'classifier__max_bin': sp_randint(100, 255)
-#                  }
+hyperparameters_lgbm = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.5),
+                    'classifier__num_iterations': sp_randint(800, 1101),
+                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),
+                    'classifier__subsample_freq': sp_randint(1, 8),
+                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),
+                    'classifier__lambda_l1': sp_uniform(loc=0.0, scale=0.7),
+                    'classifier__lambda_l2': sp_uniform(loc=0.0, scale=0.7),
+                    'classifier__silent': [False],
+                    'classifier__seed': [555],
+                    'classifier__num_leaves': sp_randint(10, 31),
+                    'classifier__max_bin': sp_randint(100, 255)
+                  }
 
 
 #best_hyperparameters_lgbm = {'classifier__colsample_bytree': 0.57468972960190079,
@@ -205,24 +207,24 @@ res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1)], n_calls=200)
 #lgb_model.fit(X_train, y_train)
 
 # run randomized search
-#n_iter_search = 25
-#clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters_xgb,
-#                                   n_iter=n_iter_search, cv = 5, scoring='f1')
-#
-#clf.fit(train, labels)
-#
-#print("Refiting")
-#
-##refitting on entire training data using best settings
-#clf.refit
-#
-#bestParam = clf.best_params_
-#
-#dfg=open("../data/param/bestParams_xgb_PRS_25.txt",'w')
-#json.dump(bestParam,dfg)
-#dfg.close()
-#
-#print(bestParam)
+n_iter_search = 15
+clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters_lgbm,
+                                   n_iter=n_iter_search, cv = 5, scoring='f1')
+
+clf.fit(train, labels)
+
+print("Refiting")
+
+#refitting on entire training data using best settings
+clf.refit
+
+bestParam = clf.best_params_
+
+dfg=open("../data/param/bestParams_lgbm_PRS_15.txt",'w')
+json.dump(bestParam,dfg)
+dfg.close()
+
+print(bestParam)
 
 # TODO 
 #a = clf.feature_importances_
@@ -278,38 +280,40 @@ res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1)], n_calls=200)
 #print(bestParam)
 
 #%%
-print("Best parameters found : ")
-# LightGBM params
-lgb_params = {}
-lgb_params['learning_rate'] = fun.wbest[0]
-lgb_params['subsample'] = fun.wbest[1]
-lgb_params['colsample_bytree'] = fun.wbest[2] 
-lgb_params['silent'] = False
-lgb_params['seed'] = 555
-lgb_params['subsample_freq'] = 4
-lgb_params['num_iterations'] = 950 
-
-dfg = open("../data/param/bestParams_lgbm_BO_200.txt",'w')
-json.dump(lgb_params,dfg)
-dfg.close()
-print(lgb_params)
-
-#%%
-print("Refit full model ... ")
-lgb_model = LGBMClassifier(**lgb_params)    
-lgb_model.fit(train, labels)
+#print("Best parameters found : ")
+## LightGBM params
+#lgb_params = {}
+#lgb_params['learning_rate'] = fun.wbest[0]
+#lgb_params['subsample'] = fun.wbest[1]
+#lgb_params['colsample_bytree'] = fun.wbest[2]
+#lgb_params['lambda_l1'] = fun.wbest[3]
+#lgb_params['lambda_l2'] = fun.wbest[4] 
+#lgb_params['silent'] = False
+#lgb_params['seed'] = 555
+#lgb_params['subsample_freq'] = 4
+#lgb_params['num_iterations'] = 950 
+#
+#dfg = open("../data/param/bestParams_lgbm_BO_200.txt",'w')
+#json.dump(lgb_params,dfg)
+#dfg.close()
+#print(lgb_params)
+#
+##%%
+#print("Refit full model ... ")
+#lgb_model = LGBMClassifier(**lgb_params)    
+#lgb_model.fit(train, labels)
 
 #%%
 print("Import testset ... ")
-test = pd.read_csv('../data/test_fusion_15_02.csv', index_col=0)
+test = pd.read_csv('../data/test_18_02.csv', index_col=0)
 
 test = test.fillna(0)
 test = test[features].values
 
 #%%
 print("Prediction ... ")
-y_pred = lgb_model.predict_proba(test)[:,1] 
-#y_pred = clf.predict_proba(test)[:,1] 
+#y_pred = lgb_model.predict_proba(test)[:,1] 
+y_pred = clf.predict_proba(test)[:,1] 
 median = np.median(y_pred)
 ind_0_median = y_pred < median
 ind_0 = y_pred < 0.5
@@ -328,11 +332,11 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('../data/Submissions/submit_lgbm_BO_200.csv', index=False)
+result.to_csv('../data/Submissions/submit_lgbm_PRS_15.csv', index=False)
 
 result_median = pd.DataFrame()
 result_median['id'] = range(len(y_pred_median))
 result_median['category'] = y_pred_median
 result_median = result.astype(int)
-result_median.to_csv('../data/Submissions/submit_lgbm_BO_200_median.csv', index=False)
+result_median.to_csv('../data/Submissions/submit_lgbm_PRS_15_median.csv', index=False)
 

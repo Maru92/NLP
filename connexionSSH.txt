@@ -1,7 +1,6 @@
 ﻿#### nohup
 
-nohup python LGBMpredict.py > logs/LGBM_train.txt 2> logs/erreurs_LGBM.log &
-nohup python NNpredict.py > logs/NN_train_mini.txt 2> logs/erreurs_NN_mini.log &
+nohup python LGBMpredict.py > logs/LGBM_train_BO.txt 2> logs/erreurs_LGBM_BO.log &
 
 ps -ef |grep nohup
 ps -ef |grep python
@@ -16,7 +15,7 @@ mdp: X0yyfu
 //Charger des fichiers de son ordi vers le serveur
 scp train_fusion_15_02.csv dsluser81@13.81.203.35:~/data/
 sudo scp dsluser81@13.81.203.35:~/data/Submissions/submit_lgbm_PRS_10.csv ~/Documents/Machine\ Learning\ 1/
-Windows: scp dsluser81@13.81.203.35:~/data/Submissions/submit_lgbm_PRS_10_median.csv ~/Desktop
+Windows: scp dsluser81@13.81.203.35:~/data/Submissions/submit_xgb_PRS_25_median.csv ~/Desktop/NLP/data/Submissions
 
 
 #### GIT
