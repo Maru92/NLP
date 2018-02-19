@@ -168,17 +168,17 @@ pipeline = Pipeline([
 #lambda, alpha
 
 # specify parameters and distributions to sample from
-hyperparameters_lgbm = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.5),
+hyperparameters_lgbm = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.07),
                     'classifier__num_iterations': sp_randint(800, 1101),
-                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),
+                    'classifier__subsample': sp_uniform(loc=0.6, scale=0.3),
                     'classifier__subsample_freq': sp_randint(1, 8),
                     'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),
-                    'classifier__lambda_l1': sp_uniform(loc=0.0, scale=0.7),
-                    'classifier__lambda_l2': sp_uniform(loc=0.0, scale=0.7),
+                    'classifier__lambda_l1': sp_uniform(loc=0.5, scale=0.7),
+                    'classifier__lambda_l2': sp_uniform(loc=0.5, scale=0.7),
                     'classifier__silent': [False],
                     'classifier__seed': [555],
-                    'classifier__num_leaves': sp_randint(10, 31),
-                    'classifier__max_bin': sp_randint(100, 255)
+                    'classifier__num_leaves': sp_randint(15, 31),
+                    'classifier__max_bin': sp_randint(125, 255)
                   }
 
 
@@ -203,11 +203,24 @@ hyperparameters_lgbm = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=
 #                          'num_leaves': 25, 
 #                          'num_iterations': 960}
 
+# Score: 0.97855
+#best_hyperparameters_lgbm_3 = {'silent': True, 
+#                          'subsample_freq': 3, 
+#                          'learning_rate': 0.033155350111576165, 
+#                          'max_bin': 202, 
+#                          'subsample': 0.710518376187222, 
+#                          'colsample_bytree': 0.7453807492888789,               
+#                          'seed': 555, 
+#                          'num_leaves': 18, 
+#                          'classifier__lambda_l2': 0.6762026513385271, 
+#                          'classifier__lambda_l1': 0.5998295958890201,
+#                          'num_iterations': 960}
+
 #lgb_model = LGBMClassifier(**best_hyperparameters_2)    
 #lgb_model.fit(X_train, y_train)
 
 # run randomized search
-n_iter_search = 60
+n_iter_search = 70
 clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters_lgbm,
                                    n_iter=n_iter_search, cv = 5, scoring='f1')
 
@@ -220,7 +233,7 @@ clf.refit
 
 bestParam = clf.best_params_
 
-dfg=open("../data/param/bestParams_lgbm_PRS_60.txt",'w')
+dfg=open("../data/param/bestParams_lgbm_PRS_70.txt",'w')
 json.dump(bestParam,dfg)
 dfg.close()
 
@@ -332,11 +345,11 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('../data/Submissions/submit_lgbm_PRS_60.csv', index=False)
+result.to_csv('../data/Submissions/submit_lgbm_PRS_70.csv', index=False)
 
 result_median = pd.DataFrame()
 result_median['id'] = range(len(y_pred_median))
 result_median['category'] = y_pred_median
 result_median = result.astype(int)
-result_median.to_csv('../data/Submissions/submit_lgbm_PRS_60_median.csv', index=False)
+result_median.to_csv('../data/Submissions/submit_lgbm_PRS_70_median.csv', index=False)
 
