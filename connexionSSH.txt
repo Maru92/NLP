@@ -1,6 +1,6 @@
 ﻿#### nohup
 
-nohup python LGBMpredict.py > logs/LGBM_train_PRS_70.txt 2> logs/erreurs_LGBM_PRS_70.log &
+nohup python LGBMpredict.py > logs/LGBM_train_BO_50.txt 2> logs/erreurs_LGBM_BO_50.log &
 
 ps -ef |grep nohup
 ps -ef |grep python
@@ -13,7 +13,7 @@ ssh dsluser81@13.81.203.35
 mdp: X0yyfu
 
 //Charger des fichiers de son ordi vers le serveur
-scp test_directed.csv dsluser81@13.81.203.35:~/data/
+scp train_directed.csv dsluser81@13.81.203.35:~/data/
 sudo scp dsluser81@13.81.203.35:~/data/Submissions/submit_lgbm_PRS_10.csv ~/Documents/Machine\ Learning\ 1/
 Windows: scp dsluser81@13.81.203.35:~/data/Submissions/submit_lgbm_PRS_median_60.csv ~/Desktop/NLP/data/
 

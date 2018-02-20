@@ -108,6 +108,7 @@ def objective_lgbm(param):
         pred = lgb_model.predict_proba(X_valid)[:,1]
         feat_prob[idx_val] = pred
     
+    y_pred = np.empty(train.shape[0])
     ind_0 = feat_prob < 0.5
     ind_1 = np.logical_not(ind_0)
     y_pred[ind_0] = 0
