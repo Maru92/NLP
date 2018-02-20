@@ -106,7 +106,7 @@ def objective_lgbm(param):
         lgb_model.fit(X_train, y_train)
         
         pred = lgb_model.predict_proba(X_valid)[:,1]
-        feat_prob[idx_val] = pred[:,1]
+        feat_prob[idx_val] = pred
     
     ind_0 = feat_prob < 0.5
     ind_1 = np.logical_not(ind_0)
@@ -128,15 +128,15 @@ def objective_lgbm(param):
 #
 #    return min_f
 
-#%%
-#print("Start optimization with cma")
-#fun = Objective_Function(objective_lgbm)
-#res = cma.fmin(fun, [0.03,0.7,0.74,0.6,0.68], 1e-1, options={'maxfevals': 10})
+%%
+print("Start optimization with cma")
+fun = Objective_Function(objective_lgbm)
+res = cma.fmin(fun, [0.03,0.7,0.74,0.6,0.68], 1e-1, options={'maxfevals': 10})
 
 #%%
-print("Start optimization with gp_minimize")
-fun = Objective_Function(objective_lgbm)
-res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1), (0.5,2.0), (0.5,2.0)], n_calls=200)
+#print("Start optimization with gp_minimize")
+#fun = Objective_Function(objective_lgbm)
+#res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1), (0.5,2.0), (0.5,2.0)], n_calls=200)
 
 #%%
 #print("Start optimization with PRS")
