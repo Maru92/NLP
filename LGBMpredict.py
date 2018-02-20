@@ -97,7 +97,7 @@ def objective_lgbm(param):
     
     K = 5
     cv = KFold(n_splits = K, shuffle = True, random_state=1)
-    y_pred = np.empty(train.shape[0])
+    feat_prob = np.empty(train.shape[0])
     for i, (idx_train, idx_val) in enumerate(cv.split(train)):
         print("Fold ", i )
         X_train = train[idx_train]
@@ -106,8 +106,12 @@ def objective_lgbm(param):
         lgb_model.fit(X_train, y_train)
         
         pred = lgb_model.predict_proba(X_valid)[:,1]
-        y_pred[idx_val] = np.argmax(pred, axis=1)
+        feat_prob[idx_val] = pred[:,1]
     
+    ind_0 = feat_prob < 0.5
+    ind_1 = np.logical_not(ind_0)
+    y_pred[ind_0] = 0
+    y_pred[ind_1] = 1
     return 1-f1_score(labels, y_pred)
 
 #%%
