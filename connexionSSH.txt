@@ -13,7 +13,7 @@ ssh dsluser81@13.81.203.35
 mdp: X0yyfu
 
 //Charger des fichiers de son ordi vers le serveur
-scp train_18_02.csv dsluser81@13.81.203.35:~/data/
+scp test_directed.csv dsluser81@13.81.203.35:~/data/
 sudo scp dsluser81@13.81.203.35:~/data/Submissions/submit_lgbm_PRS_10.csv ~/Documents/Machine\ Learning\ 1/
 Windows: scp dsluser81@13.81.203.35:~/data/Submissions/submit_lgbm_PRS_median_60.csv ~/Desktop/NLP/data/
 
