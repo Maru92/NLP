@@ -19,7 +19,7 @@ def overlap(row, field):
     text1 = row[field+'_target']
     text2 = row[field+'_source']
     text1 = stop_words_stems(text1)
-    text2 = stop_words_stems(text1)
+    text2 = stop_words_stems(text2)
     overlap = len(set(text1).intersection(set(text2)))
     return overlap
 
@@ -58,6 +58,7 @@ def common(row, field='Authors'):
     return common
     
 def stop_words_stems(txt):
+    txt = txt.split(",")
     txt = [token for token in txt if token not in stpwds]
     txt = [stemmer.stem(token) for token in txt]
     return txt    

@@ -291,13 +291,13 @@ def siamois_cnn(maxlen, max_features, filters=64, sizes=[2, 3, 5, 8], embedding_
     
     merge = submult(x1, x2)
     
-    gru = CuDNNGRU(64, return_sequences=True)
-    gru1 = apply_multiple(gru(emb1), [GlobalAvgPool1D(), GlobalMaxPool1D()])
-    gru2 = apply_multiple(gru(emb2), [GlobalAvgPool1D(), GlobalMaxPool1D()])
+    #gru = CuDNNGRU(64, return_sequences=True)
+    #gru1 = apply_multiple(gru(emb1), [GlobalAvgPool1D(), GlobalMaxPool1D()])
+    #gru2 = apply_multiple(gru(emb2), [GlobalAvgPool1D(), GlobalMaxPool1D()])
     
-    gru_merge = submult(gru1, gru2)
+    #gru_merge = submult(gru1, gru2)
     
-    merge = Concatenate()([merge, gru_merge])
+    #merge = Concatenate()([merge, gru_merge])
     
     merge = Dropout(0.1)(merge)
     merge = Dense(512, activation='relu')(merge)
@@ -313,7 +313,7 @@ def siamois_char(maxlen, max_features, filters=64, sizes=[2, 3, 5, 8], embedding
     inp1 = Input(shape=(maxlen,), dtype='uint8')
     inp2 = Input(shape=(maxlen,), dtype='uint8')
     
-    emb = Embedding(max_features, 32)
+    emb = Embedding(max_features, 16)
     #emb = Lambda(K.one_hot, arguments={'num_classes':max_features}, output_shape=(maxlen, max_features))
     
     emb1 = emb(inp1)  
@@ -355,3 +355,65 @@ def siamois_char(maxlen, max_features, filters=64, sizes=[2, 3, 5, 8], embedding
     model = Model(inputs=[inp1, inp2], outputs=preds)
     print(model.summary())
     return model
+
+def deep_char(maxlen, max_features=64, nblocks=4, ns = [2, 2, 2, 2]):
+    inp1 = Input(shape=(maxlen,), dtype='uint8')
+    inp2 = Input(shape=(maxlen,), dtype='uint8')
+    
+    emb = Embedding(max_features, 16)
+    
+    emb1 = emb(inp1)
+    emb2 = emb(inp2)
+    
+    first_conv = Conv1D(64, kernel_size=3, activation='relu')
+    x1 = first_conv(emb1)
+    x2 = first_conv(emb2)
+    for i in range(nblocks):
+        conv1 =  Conv1D(64*2**(i), kernel_size=3, padding='same')
+        y1 = conv1(x1)
+        y2 = conv1(x1)
+        #y1 = BatchNormalization()(y1)
+        #y2 = BatchNormalization()(y2)
+        y1 = Activation('relu')(y1)
+        y2 = Activation('relu')(y2)
+        
+        conv2 = Conv1D(64*2**(i), kernel_size=3, padding='same')
+        y1 = conv2(y1)
+        y2 = conv2(y2)
+        #y1 = BatchNormalization()(y1)
+        #y2 = BatchNormalization()(y2)
+        y1 = Activation('relu')(y1)
+        y2 = Activation('relu')(y2)
+        
+#        l = ns[i]
+#        for j in range(l):
+#            conv =  Conv1D(64*2**(i), kernel_size=3, padding='same')
+#            y1 = conv(x1)
+#            y2 = conv(x1)
+#            y1 = BatchNormalization()(y1)
+#            y2 = BatchNormalization()(y2)
+#            y1 = Activation('relu')(y1)
+#            y2 = Activation('relu')(y2)
+        
+        
+        #conv = Conv1D(filters=64*2**(i), kernel_size=1, padding='same')(x)
+        #y1 = Add()([x1, y1])
+        #y2 = Add()([x2, y2])
+        
+        if i!=nblocks-1:
+            x1 = MaxPooling1D(pool_size=3, strides=2)(y1)
+            x2 = MaxPooling1D(pool_size=3, strides=2)(y2)
+#    x1 = Flatten()(x1)
+#    x2 = Flatten()(x2)
+    x1 = GlobalMaxPool1D()(x1)
+    x2 = GlobalMaxPool1D()(x2)
+    merge = submult(x1, x2)
+    merge = Dropout(0.1)(merge)
+    x = Dense(512, activation='relu')(merge)
+    x = Dropout(0.2)(x)
+    #x = Dense(512, activation='relu')(x)
+    preds = Dense(2, activation='softmax')(x)
+    model = Model(inputs=[inp1, inp2], outputs=preds)
+    print(model.summary())
+    return model
+
