@@ -263,6 +263,24 @@ def create_graph(X, y):
     graph.add_edges_from(edges)
     return graph
 
+def create_directed_graph(X, y):
+    graph = nx.DiGraph()
+    edges=[]
+    nodes=set()
+    for i in range(len(X)):
+        source = X[i][0]
+        target = X[i][1]
+        nodes.add(source)
+        nodes.add(target)
+        if y[i]==1:
+            edges.append((source, target))
+    #print(nodes)
+    #print(edges)
+    graph.add_nodes_from(nodes)
+    #print(list(graph.vs))
+    graph.add_edges_from(edges)
+    return graph
+
 def vertex_degree(graph, v):
     return graph.degree(v)
 
@@ -406,15 +424,80 @@ def generate_numbers(graph, X):
         num_source[i, 1]=clus[x[1]]
         num_source[i, 2]=page_rank[x[1]]
     return num_target, num_source
+
+def all_oriented_vertex(graph, v):
+    neighbors_in = graph.predecessors(v)
+    neighbors_out = graph.successors(v)
+    neighbors = list(set(neighbors_in).union(neighbors_out))
+    neighbors_plus = neighbors + [v]
+    subgraph = graph.subgraph(neighbors)
+    subgraph_plus = graph.subgraph(neighbors_plus)
+    scc = nx.number_strongly_connected_components(subgraph)
+    wcc = nx.number_weakly_connected_components(subgraph)
+    scc_plus = nx.number_strongly_connected_components(subgraph_plus)
+    #sub_edge_num = count(graph, neighbors)
+    #sub_edge_num_plus = count(graph, neighbors_plus)
+    return graph.in_degree(v), graph.out_degree(v), scc, wcc, scc_plus, neighbors_in, neighbors_out, neighbors, neighbors_plus
+
+def generate_oriented(graph, X):
+    target_feats=np.empty((X.shape[0], 5))
+    source_feats=np.empty((X.shape[0], 5))
+    edge_feats = np.empty((X.shape[0], 11))
+    l = X.shape[0]
+    t1 = time()
+    for i, x in enumerate(X):
+        t=x[0]
+        s=x[1]
+        in_d_t, out_d_t, scc_t, wcc_t, sccp_t, n_in_t, n_out_t, n_t, np_t = all_oriented_vertex(graph, t)
+        in_d_s, out_d_s, scc_s, wcc_s, sccp_s, n_in_s, n_out_s, n_s, np_s = all_oriented_vertex(graph, s)
+        com_in = len(set(n_in_t).intersection(n_in_s))
+        com_on = len(set(n_out_t).intersection(n_out_s))
+        trans_ts = len(set(n_out_t).intersection(n_in_s))
+        trans_st = len(set(n_out_s).intersection(n_in_t))
+        friends_measure_st=0
+        friends_measure_ts=0
+        for ns in n_s:
+            for nt in n_t:
+                if graph.has_edge(ns, nt):
+                    friends_measure_st+=1
+                if graph.has_edge(nt, ns):
+                    friends_measure_ts+=1
+        nh = list(set(n_t).union(n_s))            
+        nh_plus = list(set(np_t).union(np_s))
+        sub_nh = graph.subgraph(nh)
+        sub_nh_plus = graph.subgraph(nh_plus)
+        scc = nx.number_strongly_connected_components(sub_nh)
+        wcc = nx.number_weakly_connected_components(sub_nh)
+        scc_plus = nx.number_strongly_connected_components(sub_nh_plus)
+        if not nx.has_path(graph, s, t):
+            len_path_st=-1
+        else:
+            len_path_st = nx.shortest_path_length(graph, s, t)
+        if not nx.has_path(graph, t, s):
+            len_path_ts=-1
+        else:
+            len_path_ts = nx.shortest_path_length(graph, t, s)
+        target_feats[i]=[in_d_t, out_d_t, scc_t, wcc_t, sccp_t]
+        source_feats[i]=[in_d_s, out_d_s, scc_s, wcc_s, sccp_s]
+        edge_feats[i]=[com_in, com_on, trans_ts, trans_st, friends_measure_st, friends_measure_ts, scc, wcc, scc_plus, len_path_st, len_path_ts]
+        if i%10000==0:
+            print(i, l)
+            t2=time()
+            print(t2-t1)
+            t1=t2
+    return target_feats, source_feats, edge_feats
+
+
+        
             
 
-def generate_graph_features(train, K=10, fs=all_edges, len_fs=6):
+def generate_graph_features(train, K=10):
     t=time()
     X = train[['Target', 'Source']].values
     y = train[['Edge']].values
-    target_feats=np.empty((train.shape[0], len_fs))
-    source_feats=np.empty((train.shape[0], len_fs))
-    edge_feats=np.empty((train.shape[0], len_fs))
+    target_feats=np.empty((train.shape[0], 5))
+    source_feats=np.empty((train.shape[0], 5))
+    edge_feats=np.empty((train.shape[0], 11))
     print(edge_feats.shape)
     np.random.seed(7)
     cv = KFold(n_splits = K, shuffle = True, random_state=1)
@@ -427,23 +510,62 @@ def generate_graph_features(train, K=10, fs=all_edges, len_fs=6):
         X_valid = X[idx_val]
         y_valid = X[idx_val]
         print("Creating graph")
-        graph = create_graph(X_train, y_train)
+        graph = create_directed_graph(X_train, y_train)
         print("Generating vertex features")
-        #feat_target, feat_source = generate_vertex(graph, fs, X_valid)
-        feat_edge = generate_edge(graph, fs, X_valid)
+        feat_target, feat_source, feat_edge = generate_oriented(graph, X_valid)
+        target_feats[idx_val] = feat_target
+        source_feats[idx_val] = feat_source
         edge_feats[idx_val]=feat_edge
-        #feat_algo = np.asarray(generate_algo(graph, X_valid))
-        #feat_target, feat_source =  generate_numbers(graph, X_valid)
-        #target_feats[idx_val] = feat_target
-        #source_feats[idx_val] = feat_source
-        #algo_feats[idx_val]=np.reshape(feat_algo, (feat_algo.shape[1], feat_algo.shape[0]))
-        #target_feats[idx_val]=feat_target
-        #source_feats[idx_val]=feat_source
         t2=time()
         print(t2-t1)
         t1=t2
     print(time()-t)
-    return edge_feats
+    return target_feats, source_feats, edge_feats
+
+def generate_graph_features_test(train, test):
+    t=time()
+    X = train[['Target', 'Source']].values
+    y = train[['Edge']].values
+    X_test = test[['Target', 'Source']].values
+    target_feats=np.empty((train.shape[0], 5))
+    source_feats=np.empty((train.shape[0], 5))
+    edge_feats=np.empty((train.shape[0], 11))
+    print(edge_feats.shape)
+    t1 = time()
+    X_train = X
+    y_train = y
+    print("Creating graph")
+    graph = create_directed_graph(X_train, y_train)
+    print("Generating vertex features")
+    feat_target, feat_source, feat_edge = generate_oriented(graph, X_test)
+    test['Target_indegree'] = feat_target[:,0]
+    test['Target_outdegree'] = feat_target[:,1]
+    test['Target_scc'] = feat_target[:,2]
+    test['Target_wcc'] = feat_target[:,3]
+    test['Target_scc_plus'] = feat_target[:,4]
+    
+    test['Source_indegree'] = feat_source[:,0]
+    test['Source_outdegree'] = feat_source[:,1]
+    test['Source_scc'] = feat_source[:,2]
+    test['Source_wcc'] = feat_source[:,3]
+    test['Source_scc_plus'] = feat_source[:,4]
+    
+    test['Common_in'] = feat_edge[:,0]
+    test['Common_out'] = feat_edge[:,1]
+    test['Transitive_ts'] = feat_edge[:,2]
+    test['Transitive_st'] = feat_edge[:,3]
+    test['Friend_measure_st'] = feat_edge[:,4]
+    test['Friend_measure_ts'] = feat_edge[:,5]
+    test['Scc'] = feat_edge[:,6]
+    test['Wcc'] = feat_edge[:,7]
+    test['Scc_plus'] = feat_edge[:,8]
+    test['Len_path_st'] = feat_edge[:,9]
+    test['Len_path_ts'] = feat_edge[:,10]
+    t2=time()
+    print(t2-t1)
+    t1=t2
+    print(time()-t)
+    return test
 
 def generate_test_features(train, test, K=10, fs=all_edges, len_fs=6):
     t=time()
@@ -487,18 +609,27 @@ def generate_test_features(train, test, K=10, fs=all_edges, len_fs=6):
     return test
         
     
-def tokenize(train, test, max_features):
+def tokenize(train, test, max_features=15000):
     abstracts_source_tr = train['Abstract_source'].values
     abstracts_target_tr = train['Abstract_target'].values
     abstracts_source = test['Abstract_source'].values
     abstracts_target = test['Abstract_target'].values
     all_abstracts = np.concatenate((abstracts_source_tr,abstracts_target_tr))
     tokenizer = text.Tokenizer(num_words=max_features)
+    print('Fit tokenizer')
     tokenizer.fit_on_texts(all_abstracts)
+    print('Transform train')
     X_target_tr = tokenizer.texts_to_sequences(abstracts_target_tr)
     X_source_tr = tokenizer.texts_to_sequences(abstracts_source_tr)
+    print('Transform test')
     X_target = tokenizer.texts_to_sequences(abstracts_target)
     X_source = tokenizer.texts_to_sequences(abstracts_source)
+    train['Token_target_15'] = X_target_tr
+    train['Token_source_15'] = X_source_tr
+    test['Token_target_15'] = X_target
+    test['Token_source_15'] = X_source
+    return train, test
+    
     
 
     

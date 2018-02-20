@@ -113,7 +113,7 @@ def precision(y_true, y_pred):
 
 class NLPNN(BaseEstimator, ClassifierMixin, TransformerMixin):
     
-    def __init__(self, net, epochs=5, batch_size=256, num_words=10000, maxlen=150, embedding=False, num_chars=90, maxlen_chars=512, char=False):
+    def __init__(self, net, epochs=5, batch_size=256, num_words=10000, maxlen=150, embedding=False, num_chars=90, maxlen_chars=512, char=False, tokenize=True):
         self.net_func=net
         self.epochs=epochs
         self.batch_size=batch_size
@@ -121,6 +121,7 @@ class NLPNN(BaseEstimator, ClassifierMixin, TransformerMixin):
         self.maxlen=maxlen
         self.tokenizer = text.Tokenizer(num_words=num_words)
         self.embedding=embedding
+        self.tokenize = tokenize
         if char:
             self.num_words=num_chars
             self.maxlen=maxlen_chars
@@ -135,18 +136,28 @@ class NLPNN(BaseEstimator, ClassifierMixin, TransformerMixin):
         X_source = sequence.pad_sequences(X_source, maxlen=self.maxlen)
         X = [X_target, X_source]
         return X
+    
+    def pad_text(self, X):
+        X_target = X[:,0]
+        X_source = X[:,1]
+        X_target = sequence.pad_sequences(X_target, maxlen=self.maxlen)
+        X_source = sequence.pad_sequences(X_source, maxlen=self.maxlen)
+        X = [X_target, X_source]
+        return X
         
     def fit(self, X, y, eval_set=None, verbose=True):
         t = time()
         print("Treating_data")
         X_target = X[:,0]
         X_source = X[:,1]
-        X_all = np.concatenate((X_target, X_source))
-        print("Training tokenizer")
-        self.tokenizer.fit_on_texts(X_all)
-        print("Transforming X")
-        X = self.transform_text(X)
-        
+        if self.tokenize:
+            X_all = np.concatenate((X_target, X_source))
+            print("Training tokenizer")
+            self.tokenizer.fit_on_texts(X_all)
+            print("Transforming X")
+            X = self.transform_text(X)
+        else:
+            X = self.pad_text(X)
         y = np_utils.to_categorical(y)
         
         self.net = self.net_func(self.maxlen, self.num_words)
@@ -158,8 +169,11 @@ class NLPNN(BaseEstimator, ClassifierMixin, TransformerMixin):
         validation_data = eval_set
         if validation_data is not None:
             X_val, y_val = validation_data
-            print("Transforming X_val")
-            X_val = self.transform_text(X_val)
+            if self.tokenize:
+                print("Transforming X_val")
+                X_val = self.transform_text(X_val)
+            else:
+                X_val = self.pad_text(X_val)
             y_val = np_utils.to_categorical(y_val)
             validation_data=(X_val, y_val)
         if verbose:
@@ -170,12 +184,18 @@ class NLPNN(BaseEstimator, ClassifierMixin, TransformerMixin):
         return self
     
     def predict_proba(self, X):
-        X = self.transform_text(X)
+        if self.tokenize:
+            X = self.transform_text(X)
+        else:
+            X = self.pad_text(X)
         pred =  self.net.predict(X)
         return pred
     
     def predict(self, X):
-        X = self.transform_text(X)
+        if self.tokenize:
+            X = self.transform_text(X)
+        else:
+            X = self.pad_text(X)
         return np.argmax(self.net.predict(X), axis=1)
     
     def get_matrix(self, embed_size):
