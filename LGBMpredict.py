@@ -130,14 +130,14 @@ def objective_lgbm(param):
 #    return min_f
 
 #%%
-#print("Start optimization with cma")
-#fun = Objective_Function(objective_lgbm)
-#res = cma.fmin(fun, [0.03,0.7,0.74,0.6,0.68], 1e-1, options={'maxfevals': 50})
+print("Start optimization with cma")
+fun = Objective_Function(objective_lgbm)
+res = cma.fmin(fun, [0.03,0.7,0.74,0.6,0.68], 1e-1, options={'maxfevals': 50})
 
 #%%
-print("Start optimization with gp_minimize")
-fun = Objective_Function(objective_lgbm)
-res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1), (0.5,2.0), (0.5,2.0)], n_calls=50)
+#print("Start optimization with gp_minimize")
+#fun = Objective_Function(objective_lgbm)
+#res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1), (0.5,2.0), (0.5,2.0)], n_calls=50)
 
 #%%
 #print("Start optimization with PRS")
@@ -321,7 +321,7 @@ lgb_params['seed'] = 555
 lgb_params['subsample_freq'] = 4
 lgb_params['num_iterations'] = 950 
 
-dfg = open("../data/param/bestParams_lgbm_BO_50.txt",'w')
+dfg = open("../data/param/bestParams_lgbm_CMA_50.txt",'w')
 json.dump(lgb_params,dfg)
 dfg.close()
 print(lgb_params)
@@ -371,6 +371,6 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('../data/Submissions/submit_lgbm_BO_50.csv', index=False)
+result.to_csv('../data/Submissions/submit_lgbm_CMA_50.csv', index=False)
 
 
