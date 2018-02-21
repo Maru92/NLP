@@ -1,6 +1,6 @@
 ﻿#### nohup
 
-nohup python LGBMpredict.py > logs/LGBM_train_BO_50.txt 2> logs/erreurs_LGBM_BO_50.log &
+nohup python LGBMpredict.py > logs/LGBM_train_CMA_50.txt 2> logs/erreurs_LGBM_CMA_50.log &
 
 ps -ef |grep nohup
 ps -ef |grep python
