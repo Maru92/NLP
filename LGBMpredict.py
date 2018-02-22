@@ -241,10 +241,10 @@ n_iter_search = 100
 clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters_xgb,
                                    n_iter=n_iter_search, cv = 5, scoring='f1')
 
-#clf.fit(train, labels)
-#
-#print("Refiting")
-#
+clf.fit(train, labels)
+
+print("Refiting")
+
 #refitting on entire training data using best settings
 clf.refit
 
