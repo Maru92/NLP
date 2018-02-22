@@ -135,9 +135,9 @@ def objective_lgbm(param):
 #res = cma.fmin(fun, [0.03,0.7,0.74,0.6,0.68], 1e-1, options={'maxfevals': 50})
 
 #%%
-print("Start optimization with gp_minimize")
-fun = Objective_Function(objective_lgbm)
-res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1), (0.5,2.0), (0.5,2.0)], n_calls=71)
+#print("Start optimization with gp_minimize")
+#fun = Objective_Function(objective_lgbm)
+#res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1), (0.5,2.0), (0.5,2.0)], n_calls=71)
 
 #%%
 #print("Start optimization with PRS")
@@ -158,28 +158,30 @@ res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1), (0.5,2.0), (0.5,2.0)],
 #    ('classifier', lgb_model)
 #])
 
-#xgb_params = {}
-#xgb_params['n_estimators'] = 512
-#xgb_params['max_depth'] = 6
-#xgb_params['subsample'] = 0.9
-#xgb_params['scale_pos_weight'] = 0.8366365291081073
-#
-#xgb_model = XGBClassifier(**xgb_params)
-#
-#pipeline = Pipeline([
-#    ('classifier', xgb_model)
-#])
-#    
-#hyperparameters_xgb = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.6),  
-#                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),  
-#                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),  
-#                    'classifier__colsample_bylevel': sp_uniform(loc=0.3, scale=0.7), 
-#                    'classifier__scale_pos_weight': sp_uniform(loc=0.7, scale=0.6),  
-#                    'classifier__max_depth': sp_randint(1, 10),   
-#                    'classifier__silent': [0],  
-#                    'classifier__seed': [555],  
-#                    'classifier__n_estimators': sp_randint(500, 1101)  
-#                  }
+xgb_params = {}
+xgb_params['n_estimators'] = 512
+xgb_params['max_depth'] = 6
+xgb_params['subsample'] = 0.9
+xgb_params['scale_pos_weight'] = 0.8366365291081073
+
+xgb_model = XGBClassifier(**xgb_params)
+
+pipeline = Pipeline([
+    ('classifier', xgb_model)
+])
+    
+hyperparameters_xgb = { 'classifier__learning_rate': sp_uniform(loc=0.0, scale=0.6),  
+                    'classifier__subsample': sp_uniform(loc=0.5, scale=0.5),  
+                    'classifier__colsample_bytree': sp_uniform(loc=0.3, scale=0.7),  
+                    'classifier__colsample_bylevel': sp_uniform(loc=0.3, scale=0.7), 
+                    'classifier__scale_pos_weight': sp_uniform(loc=0.7, scale=0.6),
+                    'classifier__reg_lambda': sp_uniform(loc=0.5, scale=1.0),
+                    'classifier__reg_alpha': sp_uniform(loc=0.5, scale=1.0),
+                    'classifier__max_depth': sp_randint(1, 10),   
+                    'classifier__silent': [0],  
+                    'classifier__seed': [555],  
+                    'classifier__n_estimators': sp_randint(800, 1101)  
+                  }
 #lambda, alpha
 
 # specify parameters and distributions to sample from
@@ -235,24 +237,24 @@ res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1), (0.5,2.0), (0.5,2.0)],
 #lgb_model.fit(X_train, y_train)
 
 # run randomized search
-#n_iter_search = 70
-#clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters_lgbm,
-#                                   n_iter=n_iter_search, cv = 5, scoring='f1')
-#
+n_iter_search = 100
+clf = RandomizedSearchCV(pipeline, param_distributions=hyperparameters_xgb,
+                                   n_iter=n_iter_search, cv = 5, scoring='f1')
+
 #clf.fit(train, labels)
 #
 #print("Refiting")
 #
-##refitting on entire training data using best settings
-#clf.refit
-#
-#bestParam = clf.best_params_
-#
-#dfg=open("../data/param/bestParams_lgbm_PRS_70.txt",'w')
-#json.dump(bestParam,dfg)
-#dfg.close()
-#
-#print(bestParam)
+#refitting on entire training data using best settings
+clf.refit
+
+bestParam = clf.best_params_
+
+dfg=open("../data/param/bestParams_xgb_PRS_100.txt",'w')
+json.dump(bestParam,dfg)
+dfg.close()
+
+print(bestParam)
 
 # TODO 
 #a = clf.feature_importances_
@@ -308,23 +310,23 @@ res = gp_minimize(fun, [(0.01, 0.07), (0.7,1.0), (0.4,1), (0.5,2.0), (0.5,2.0)],
 #print(bestParam)
 
 #%%
-print("Best parameters found : ")
-# LightGBM params
-lgb_params = {}
-lgb_params['learning_rate'] = fun.wbest[0]
-lgb_params['subsample'] = fun.wbest[1]
-lgb_params['colsample_bytree'] = fun.wbest[2]
-lgb_params['lambda_l1'] = fun.wbest[3]
-lgb_params['lambda_l2'] = fun.wbest[4] 
-lgb_params['silent'] = False
-lgb_params['seed'] = 555
-lgb_params['subsample_freq'] = 4
-lgb_params['num_iterations'] = 950 
-
-dfg = open("../data/param/bestParams_lgbm_BO_71.txt",'w')
-json.dump(lgb_params,dfg)
-dfg.close()
-print(lgb_params)
+#print("Best parameters found : ")
+## LightGBM params
+#lgb_params = {}
+#lgb_params['learning_rate'] = fun.wbest[0]
+#lgb_params['subsample'] = fun.wbest[1]
+#lgb_params['colsample_bytree'] = fun.wbest[2]
+#lgb_params['lambda_l1'] = fun.wbest[3]
+#lgb_params['lambda_l2'] = fun.wbest[4] 
+#lgb_params['silent'] = False
+#lgb_params['seed'] = 555
+#lgb_params['subsample_freq'] = 4
+#lgb_params['num_iterations'] = 950 
+#
+#dfg = open("../data/param/bestParams_lgbm_BO_71.txt",'w')
+#json.dump(lgb_params,dfg)
+#dfg.close()
+#print(lgb_params)
 
 
 #%%
@@ -337,34 +339,34 @@ test = preprocessing.scale(test)
 
 
 #%%
-print("Refit full model with K folds ... ")
-lgb_model = LGBMClassifier(**lgb_params)
-    
-K = 5
-cv = KFold(n_splits = K, shuffle = True, random_state=1)
-y_pred_prob = np.zeros((test.shape[0],2))
-for i, (idx_train, idx_val) in enumerate(cv.split(train)):
-    print("Fold ", i )
-    X_train = train[idx_train]
-    y_train = labels[idx_train]
-    
-    lgb_model.fit(X_train, y_train)
-    
-    pred_test_fold = lgb_model.predict_proba(test)
-    
-    y_pred_prob += pred_test_fold
-    
-y_pred_prob = y_pred_prob/K
-y_pred = np.argmax(y_pred_prob, axis=1)
+#print("Refit full model with K folds ... ")
+#lgb_model = LGBMClassifier(**lgb_params)
+#    
+#K = 5
+#cv = KFold(n_splits = K, shuffle = True, random_state=1)
+#y_pred_prob = np.zeros((test.shape[0],2))
+#for i, (idx_train, idx_val) in enumerate(cv.split(train)):
+#    print("Fold ", i )
+#    X_train = train[idx_train]
+#    y_train = labels[idx_train]
+#    
+#    lgb_model.fit(X_train, y_train)
+#    
+#    pred_test_fold = lgb_model.predict_proba(test)
+#    
+#    y_pred_prob += pred_test_fold
+#    
+#y_pred_prob = y_pred_prob/K
+#y_pred = np.argmax(y_pred_prob, axis=1)
 
 
 #%%
-#print("Prediction ... ")
-#y_pred = clf.predict_proba(test)[:,1] 
-#ind_0 = y_pred < 0.5
-#ind_1 = np.logical_not(ind_0)
-#y_pred[ind_0] = 0
-#y_pred[ind_1] = 1
+print("Prediction ... ")
+y_pred = clf.predict_proba(test)[:,1] 
+ind_0 = y_pred < 0.5
+ind_1 = np.logical_not(ind_0)
+y_pred[ind_0] = 0
+y_pred[ind_1] = 1
 
 #%%
 print("Writing ... ")
@@ -372,6 +374,6 @@ result = pd.DataFrame()
 result['id'] = range(len(y_pred))
 result['category'] = y_pred
 result = result.astype(int)
-result.to_csv('../data/Submissions/submit_lgbm_BO_71.csv', index=False)
+result.to_csv('../data/Submissions/submit_xgb_PRS_100.csv', index=False)
 
 
