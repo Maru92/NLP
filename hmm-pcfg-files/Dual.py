@@ -140,7 +140,10 @@ if __name__ == '__main__':
     
     # Postag initialization
     states, observations, initial_probs, transition_probs, final_probs, emission_probs = postag.get_transition_emission(options['transition'],options['emission'])
-    inv_states = {v: k for k, v in states.iteritems()}
+    # Python 2
+    #inv_states = {v: k for k, v in states.iteritems()}
+    # Python 3
+    inv_states = {v: k for k, v in states.items()}
     viterbi = (options['viterbi'] == "Y")
     
     # PCFG initialization
