@@ -1,0 +1,32 @@
+DUAL: IN PROGRESS
+TODO:
+--> Externaliser le calcul du dictionnaire des rules dans PCFG (le faire aussi dans l'autre fichier, cela fait un gain de temps énorme)
+--> Faire une fusion des dictionnaires, en pratique c'est juste grossir celui du POSTAG
+--> Finaliser idem le cky_dual, c'est juste un changement dans l'initialisation.
+
+-> A vu d'oeil le T est la grammaire du Postag et on récupére avec Parser un postag sur les derniers labels
+-> Trouver un eta adéquat pour apprendre (cf papier )
+-> Question: est ce que les probabilités sont les mêmes pour les terminaux ?
+
+
+
+
+
+PARSER:  DONE
+https://github.com/mmera/ckyParser/blob/master/cky.py
+-> Version probabiliste à laquelle je donne juste ma grammaire
+-> Cela tourne trop longtemps 
+--> TODO: Essayer d'encoder avec des dictionnaires pour aller plus vite
+	-> Lexique: encoder un lexique, qui à un mot associe les règles correspondantes
+-> La fin n'est pas un 'S' ...
+--> TODO: Ajouter une contrainte qui fait que les arbres elligibles en nodes_back[0][n] doivent avoir un root en 'S'
+
+TD X : Echec cuisant
+https://github.com/stensaethf/CKY-Parser/blob/master/parser.py#L51
+-> Version non probabiliste que j'ai adapté en probabiliste
+-> Cela met des heures à tourner ou alors j'ai mal adapté
+
+POSTAG:  DONE
+- Les mots inconnus (unknown_words) sont encodés avec un NONE, idem pour les ["*T*","*","*RNR*","*0*","*ICH*"]
+- On a argmax, donc il faut que tout soit -inf sauf quand j'ai une info
+- Quand je suis sur un mot hors dict, je met un NONE obligatoirement, donc je trafique l'emission
