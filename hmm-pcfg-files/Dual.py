@@ -121,10 +121,10 @@ if __name__ == '__main__':
     opt_parser = optparse.OptionParser()
     opt_parser.add_option("--pcfg", dest="pcfg", default="pcfg")
     opt_parser.add_option("--data", dest="data", default="dev_sents")
-    opt_parser.add_option("--output_parses", dest="output_parses", default="candidate-parses")
+    opt_parser.add_option("--output_parses", dest="output_parses", default="candidate-parses-dual")
     opt_parser.add_option("--transition", dest="transition", default="hmm_trans")
     opt_parser.add_option("--emission", dest="emission", default = "hmm_emits")
-    opt_parser.add_option("--output_postags", dest="output_postags", default="candidate-postags")
+    opt_parser.add_option("--output_postags", dest="output_postags", default="candidate-postags-dual")
     opt_parser.add_option("--viterbi", dest="viterbi", default="Y")
     opt_parser.add_option("--iteration", dest="iteration", default="1")
 

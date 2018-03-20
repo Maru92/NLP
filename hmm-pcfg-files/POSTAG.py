@@ -85,7 +85,7 @@ def scores_sent(sent, initial_probs, transition_probs, final_probs, emission_pro
     initial_scores = initial_probs
     final_scores = final_probs
     
-    for pos in xrange(len(sent)):
+    for pos in range(len(sent)):
         word = sent[pos].lower()
         if word in observations.keys() :
             # We keep -inf for the indexes where we have no information
@@ -93,7 +93,7 @@ def scores_sent(sent, initial_probs, transition_probs, final_probs, emission_pro
             emission_scores[pos, ind] = emission_probs[observations[word], ind]
         else:
             emission_scores[pos, states["NONE"]] = 0
-            print word, " not in dictionnary. Uncoded NONE !"
+            print(word, " not in dictionnary. Uncoded NONE !")
         if pos > 0:
             transition_scores[pos-1, :, :] = transition_probs
         
@@ -183,8 +183,8 @@ def run_forward(initial_scores, transition_scores, final_scores, emission_scores
     forward[0, :] = emission_scores[0, :] + initial_scores
 
     # Forward loop.
-    for pos in xrange(1, length):
-        for current_state in xrange(num_states):
+    for pos in range(1, length):
+        for current_state in range(num_states):
             # Note the fact that multiplication in log domain turns a sum and sum turns a logsum
             forward[pos, current_state] = logsum(forward[pos-1, :] + transition_scores[pos-1, current_state, :])
             forward[pos, current_state] += emission_scores[pos, current_state]
@@ -214,8 +214,8 @@ def run_backward(initial_scores, transition_scores, final_scores, emission_score
     backward[length-1, :] = final_scores
 
     # Backward loop.
-    for pos in xrange(length-2, -1, -1):
-        for current_state in xrange(num_states):
+    for pos in range(length-2, -1, -1):
+        for current_state in range(num_states):
             backward[pos, current_state] = \
                 logsum(backward[pos+1, :] +
                        transition_scores[pos, :, current_state] +
@@ -256,16 +256,16 @@ def compute_posteriors(initial_scores, transition_scores,
     # are matrices. Python is smart enough to replicate log_likelihood
     # to form a matrix of the right size. This is called broadcasting.
     state_posteriors = np.zeros([length, num_states])  # State posteriors.
-    for pos in xrange(length):
+    for pos in range(length):
         state_posteriors[pos, :] = forward[pos, :] + backward[pos, :]
         state_posteriors[pos, :] -= log_likelihood
 
     # Use the forward and backward variables along with the transition
     # and emission scores to obtain the transition posteriors.
     transition_posteriors = np.zeros([length-1, num_states, num_states])
-    for pos in xrange(length-1):
-        for prev_state in xrange(num_states):
-            for state in xrange(num_states):
+    for pos in range(length-1):
+        for prev_state in range(num_states):
+            for state in range(num_states):
                 transition_posteriors[pos, state, prev_state] = \
                     forward[pos, prev_state] + \
                     transition_scores[pos, state, prev_state] + \
@@ -296,8 +296,8 @@ def run_viterbi(initial_scores, transition_scores, final_scores, emission_scores
     viterbi_scores[0, :] = emission_scores[0, :] + initial_scores
     
     # Viterbi & Backtrack loop.
-    for pos in xrange(1,length):
-        for current_state in xrange(num_states):
+    for pos in range(1,length):
+        for current_state in range(num_states):
             viterbi_scores[pos, current_state] = np.max(viterbi_scores[pos-1, :] + transition_scores[pos-1, current_state, :])
             viterbi_scores[pos, current_state] += emission_scores[pos, current_state]
             viterbi_paths[pos, current_state] = np.argmax(viterbi_scores[pos-1, :] + transition_scores[pos-1, current_state, :])
@@ -321,10 +321,10 @@ if __name__ == '__main__':
     (options, args) = opt_parser.parse_args()
     options = vars(options)
 
-    print "POS-tags options:"
+    print("POS-tags options:")
     for opt in options:
-        print "  %-12s: %s" % (opt, options[opt])
-    print ""
+        print("  %-12s: %s" , (opt, options[opt]))
+    print("")
     
     states, observations, initial_probs, transition_probs, final_probs, emission_probs = get_transition_emission(options['transition'],options['emission'])
     sentences = get_sentence(options['data'])

@@ -1,4 +1,10 @@
-DUAL: IN PROGRESS
+nohup python PCFGParser.py --data=test_sents > logs/pcfg_test.txt 2> logs/erreurs_pcfg_test.log &
+nohup python PCFGParser.py --output=candidate-parses-dev > logs/pcfg_dev.txt 2> logs/erreurs_pcfg_dev.log &
+nohup python Dual.py --data=test_sents > logs/dual_test.txt 2> logs/erreurs_dual_test.log &
+nohup python Dual.py --output_parses=candidate-parses-dual-dev --output_postags=candidate-postags-dual-dev > logs/dual_dev.txt 2> logs/erreurs_dual_dev.log &
+
+
+DUAL: DONE
 TODO:
 --> Externaliser le calcul du dictionnaire des rules dans PCFG (le faire aussi dans l'autre fichier, cela fait un gain de temps énorme)
 --> Faire une fusion des dictionnaires, en pratique c'est juste grossir celui du POSTAG
@@ -7,10 +13,6 @@ TODO:
 -> A vu d'oeil le T est la grammaire du Postag et on récupére avec Parser un postag sur les derniers labels
 -> Trouver un eta adéquat pour apprendre (cf papier )
 -> Question: est ce que les probabilités sont les mêmes pour les terminaux ?
-
-
-
-
 
 PARSER:  DONE
 https://github.com/mmera/ckyParser/blob/master/cky.py
