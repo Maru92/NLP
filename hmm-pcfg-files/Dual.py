@@ -63,7 +63,7 @@ def cky_dual(words,grammar,rule_probabilities,knwon_vocab,states,u):
         if word not in knwon_vocab:
             print("Word unknown : ", word, " . Adding the rule.")
             rule = tuple(['NONE',word])
-            grammar.append(rule)
+            grammar.add(rule)
             rule_probs[rule] = 0.0
 
         for A in non_terms:
@@ -82,10 +82,8 @@ def cky_dual(words,grammar,rule_probabilities,knwon_vocab,states,u):
                         continue
                     a, b, c = states[rule[0]], states[rule[1]], states[rule[2]]
                     concat_rule = rule[0], ' '.join((rule[1], rule[2]))
-                    if concat_rule in grammar:
-                        prob = score[begin,split,b] + score[split,end,c] + rule_probabilities[concat_rule]
-                    else:
-                        continue
+                    #if concat_rule in grammar:
+                    prob = score[begin,split,b] + score[split,end,c] + rule_probabilities[concat_rule]
                     if prob > score[begin,end,a]:
                         score[begin,end,a] = prob
                         back[begin][end][a] = split, b, c
