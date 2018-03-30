@@ -42,12 +42,15 @@ def clean_string(string, punct=punct, my_regex=my_regex, to_lower=False):
 #%% NLTK initialization
 nltk.download('punkt') # for tokenization
 nltk.download('stopwords')
+
 #stpwds = set(nltk.corpus.stopwords.words("english"))
 # Other Approach of stop word to test
 with open('smart_stopwords.txt', 'r') as my_file: 
     stpwds = my_file.read().splitlines()
 stemmer = nltk.stem.PorterStemmer()
-
+#stemmer = ntlk.stem.SnowballStemmer()
+#lemma = ntlk..wordnet.WordNetLemmatizer()
+#lemma.lemmatize(string)
 #%% data loading and preprocessing 
 
 # the columns of the data frame below are: 

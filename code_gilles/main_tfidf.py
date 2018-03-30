@@ -54,8 +54,8 @@ def get_data():
     test = pd.merge(testing_set, node_information, how='left', left_on='Target_ID', right_index=True)
     test = pd.merge(test, node_information, how='left', left_on='Source_ID', right_index=True, suffixes=['_target', '_source'])
     
-    train = train[:1000]
-    test = test[:1000]
+    #train = train[:1000]
+    #test = test[:1000]
     
     #print("Loaded")
     t=time()
