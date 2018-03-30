@@ -180,7 +180,7 @@ if __name__ == '__main__':
                 z_hmm[i,x] = 1
             
             parse_tree = cky_dual(sent,grammar,rule_probs,known_vocab,inner_states,u)
-            postag_pcfg = get_postag_from_parser(parse_tree,states)
+            postag_pcfg = get_postag_from_parser(parse_tree,inner_states)
             
             for i,x in enumerate(postag_pcfg):
                 if x < y_pcfg.shape[1]:
