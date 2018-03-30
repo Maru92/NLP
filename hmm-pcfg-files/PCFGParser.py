@@ -26,7 +26,7 @@ def get_grammar_prob(filename):
         
     rule_probs = {}
     grammar = []
-    known_vocab = []
+    known_vocab = set([])
     for line in pcfg:
         tables = line.split('\t')
         table = []
@@ -37,14 +37,14 @@ def get_grammar_prob(filename):
             grammar.append(rule)
             rule_probs[rule] = float(table[2])
             if table[1] not in known_vocab:
-                known_vocab.append(table[1])
+                known_vocab.add(table[1])
         elif len(table) == 4:
             rule = tuple([table[0],table[1]+" "+table[2]])
             grammar.append(rule)
             rule_probs[rule] = float(table[3])
         else:
             print("Load error : ", table)
-    return grammar, rule_probs, known_vocab
+    return set(grammar), rule_probs, known_vocab
 
 def get_binary_rules(grammar):
     '''
@@ -57,7 +57,7 @@ def get_binary_rules(grammar):
         if len(rules[1].split(' ')) == 2:
             b, c = rules[1].split(' ')
             bin_set.add((rules[0],b,c))
-            bin_set.add((rules[0], c, b))
+            #bin_set.add((rules[0], c, b))
     return list(bin_set)
 
 # We delete the unary rule part, we don't have it
@@ -79,7 +79,7 @@ def cky(words,grammar,rule_probabilities,knwon_vocab):
     for i,word in enumerate(words):
         if word not in knwon_vocab:
             rule = tuple(['NONE',word])
-            grammar.append(rule)
+            grammar.add(rule)
             rule_probs[rule] = 0.0
 
         for j,A in enumerate(non_terms):
@@ -100,10 +100,8 @@ def cky(words,grammar,rule_probabilities,knwon_vocab):
                         continue
                     a, b, c = rule_index[rule[0]], rule_index[rule[1]], rule_index[rule[2]]
                     concat_rule = rule[0], ' '.join((rule[1], rule[2]))
-                    if concat_rule in grammar:
-                        prob = score[begin,split,b] + score[split,end,c] + rule_probabilities[concat_rule]
-                    else:
-                        continue
+                    #if concat_rule in grammar:
+                    prob = score[begin,split,b] + score[split,end,c] + rule_probabilities[concat_rule]
                     if prob > score[begin,end,a]:
                         score[begin,end,a] = prob
                         back[begin][end][a] = split, b, c

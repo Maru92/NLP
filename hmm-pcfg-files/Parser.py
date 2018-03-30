@@ -1,5 +1,5 @@
 import os
-os.chdir("C:\Users\Marc\Desktop\NLP\Assignment\hmm-pcfg-files")
+os.chdir("D:\Polytechnique\Informatique\INF582\Project\NLP\hmm-pcfg-files")
 
 import numpy as np
 
@@ -38,7 +38,7 @@ def get_grammar_prob(filename):
         
     rule_probs = {}
     grammar = []
-    known_vocab = []
+    known_vocab = set([])
     for line in pcfg:
         tables = line.split('\t')
         table = []
@@ -49,14 +49,14 @@ def get_grammar_prob(filename):
             grammar.append(rule)
             rule_probs[rule] = float(table[2])
             if table[1] not in known_vocab:
-                known_vocab.append(table[1])
+                known_vocab.add(table[1])
         elif len(table) == 4:
             rule = tuple([table[0],table[1]+" "+table[2]])
             grammar.append(rule)
             rule_probs[rule] = float(table[3])
         else:
             print "Load error : ", table 
-    return grammar, rule_probs, known_vocab
+    return set(grammar), rule_probs, known_vocab
 
 def get_binary_rules(grammar):
     '''
@@ -69,7 +69,7 @@ def get_binary_rules(grammar):
         if len(rules[1].split(' ')) == 2:
             b, c = rules[1].split(' ')
             bin_set.add((rules[0],b,c))
-            bin_set.add((rules[0], c, b))
+            #bin_set.add((rules[0], c, b))
     return list(bin_set)
 
 # We delete the unary rule part, we don't have it
@@ -82,7 +82,9 @@ def cky(words,grammar,rule_probabilities,knwon_vocab,states):
     :param rule_probabilities: the probabilities of a given grammar rule (dictionary)
     :return: GrammarTree: parse tree with highest probability
     '''
-
+    
+    
+    
     non_terms = list(get_non_terms(grammar))
     score = np.full((len(words)+1,len(words)+1,len(non_terms)),-np.inf)
     back = [[[-1 for i in xrange(len(states))] for j in xrange(len(words)+1)] for k in xrange(len(words)+1)]
@@ -91,9 +93,9 @@ def cky(words,grammar,rule_probabilities,knwon_vocab,states):
         if word not in knwon_vocab:
             print "Word unknown : ", word, " . Adding the rule."
             rule = tuple(['NONE',word])
-            grammar.append(rule)
+            grammar.add(rule)
             rule_probs[rule] = 0.0
-        print word, " : Word number ", i," over ", len(words)
+        #print word, " : Word number ", i," over ", len(words)
 
         for A in non_terms:
             r = A, word   # Here change due to encode of word
@@ -101,25 +103,22 @@ def cky(words,grammar,rule_probabilities,knwon_vocab,states):
                 score[i,i+1,states[A]] = rule_probabilities[r]
 
     binary_rules = get_binary_rules(grammar)
-    for span in xrange(2,len(words)+1):
-        print "New span : ", span
-        for begin in xrange(len(words)+1-span):
-            end = begin + span
-            for split in xrange(begin+1, end):
+    for j in range(len(words)+1):
+        #print "New span : ", j
+        for begin in xrange(j-2,-1,-1):
+            for split in xrange(begin+1, j):
                 for rule in binary_rules:
-                    if begin == 0 and end == len(words) and rule[0]!='S':
+                    if begin == 0 and j == len(words) and rule[0]!='S':
                         continue
                     a, b, c = states[rule[0]], states[rule[1]], states[rule[2]]
                     concat_rule = rule[0], ' '.join((rule[1], rule[2]))
-                    if concat_rule in grammar:
-                        prob = score[begin,split,b] + score[split,end,c] + rule_probabilities[concat_rule]
-                    else:
-                        continue
-                    if prob > score[begin][end][a]:
-                        print "New max for prob: ", prob
-                        print "Begin ",begin," , End ",end," , Rule index ",a
-                        score[begin,end,a] = prob
-                        back[begin][end][a] = split, b, c
+                    rule_probabilities[concat_rule]
+                    prob = score[begin,split,b] + score[split,j,c] + rule_probabilities[concat_rule]
+                    if prob > score[begin][j][a]:
+                        #print "New max for prob: ", prob
+                        #print "Begin ",begin," , End ",j," , Rule index ",a
+                        score[begin,j,a] = prob
+                        back[begin][j][a] = split, b, c
 
     return get_parse_tree(score,back,non_terms)
 
@@ -131,7 +130,7 @@ def get_parse_tree(score, back, non_terms):
     :param non_terms: list of non_terminals
     :return: GrammarTree the final parse tree
     '''
-    root_index = score[0][len(score)-1].index(max(score[0][len(score)-1]))
+    root_index = np.argmax(score[0][len(score)-1])
     tree = build_tree(0,len(score)-1,root_index,back,non_terms)
     return tree
 
@@ -255,7 +254,7 @@ x = {}
 states_bis = complete_states_dict(x,grammar_bis)
 
 #%%
-sentence = dev_sents_2[2]
+sentence = dev_sents_2[1]
 parse_tree = cky(sentence,grammar_bis,rule_probs,known_vocab,states_bis)
 res, count = get_string_tree(parse_tree,sentence)
 print res
@@ -264,24 +263,31 @@ print res
 res, count = get_string_tree(parse_tree,sentence)
 
 #%%
+
 parses_pred_dev = []
+print(len(dev_sents_2))
+counter=0
 for sent in dev_sents_2:
-    print "New sentence ..."
-    parse_tree = cky(sentence,grammar_bis,rule_probs,known_vocab)
-    res, count = get_string_tree(parse_tree,sentence)
-    print "Parsing finished ..."
+    print(counter)
+    counter+=1
+    #print "New sentence ..."
+    parse_tree = cky(sent,grammar_bis,rule_probs,known_vocab,states_bis)
+    res, count = get_string_tree(parse_tree,sent)
+    #print "Parsing finished ..."
+    print(res)
     parses_pred_dev.append(res)
 
 with open('candidate-parses-dev', 'w') as my_file:
     for line in parses_pred_dev:
         my_file.write(line+'\n')
 
+
 #%%
 parses_pred_test = []
 for sent in test_sents_2:
-    parse_tree = cky(sentence,grammar_bis,rule_probs,known_vocab)
-    res, count = get_string_tree(parse_tree,sentence)
-    if count != len(sentence):
+    parse_tree = cky(sent,grammar_bis,rule_probs,known_vocab,states_bis)
+    res, count = get_string_tree(parse_tree,sent)
+    if count != len(sent):
         print "Error of labeling"
     parses_pred_test.append(res)
 
