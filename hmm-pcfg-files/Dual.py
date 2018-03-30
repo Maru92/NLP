@@ -61,7 +61,7 @@ def cky_dual(words,grammar,rule_probabilities,knwon_vocab,states,u):
 
     for i,word in enumerate(words):
         if word not in knwon_vocab:
-            print("Word unknown : ", word, " . Adding the rule.")
+            #print("Word unknown : ", word, " . Adding the rule.")
             rule = tuple(['NONE',word])
             grammar.add(rule)
             rule_probs[rule] = 0.0
@@ -73,7 +73,7 @@ def cky_dual(words,grammar,rule_probabilities,knwon_vocab,states,u):
 
     binary_rules = pcfg.get_binary_rules(grammar)
     for span in range(2,len(words)+1):
-        print("New span : ", span)
+        #print("New span : ", span)
         for begin in range(len(words)+1-span):
             end = begin + span
             for split in range(begin+1, end):
@@ -108,7 +108,7 @@ def scores_sent_dual(sent, initial_probs, transition_probs, final_probs, emissio
             emission_scores[pos, ind] = emission_probs[observations[word], ind] + u[pos, ind]
         else:
             emission_scores[pos, states["NONE"]] = 0 + u[pos, states["NONE"]]
-            print(word, " not in dictionnary. Uncoded NONE !")
+            #print(word, " not in dictionnary. Uncoded NONE !")
         if pos > 0:
             transition_scores[pos-1, :, :] = transition_probs
         
@@ -182,11 +182,13 @@ if __name__ == '__main__':
             parse_tree = cky_dual(sent,grammar,rule_probs,known_vocab,inner_states,u)
             postag_pcfg = get_postag_from_parser(parse_tree,inner_states)
             
+            non_leaf = 0
             for i,x in enumerate(postag_pcfg):
                 if x < y_pcfg.shape[1]:
                     y_pcfg[i,x] = 1
                 else:
-                    print("Postag PCFG is inner not leaf")
+                    non_leaf += 1
+                #    print("Postag PCFG is inner not leaf")
             
             
             
@@ -200,7 +202,7 @@ if __name__ == '__main__':
                 u = update_constraints(u,k,y_pcfg,z_hmm)
             if k == K-1:
                 print("Constraints not satisfied, end of iterations !")
-                print("Number of differences : ", np.sum(y_pcfg != z_hmm))
+                print("Number of differences : ", np.sum(y_pcfg != z_hmm)," with ",non_leaf," non_leaf postag.")
                 parsed_sent, _ = pcfg.get_string_tree(parse_tree,sent)
                 best_pcfg.append(parsed_sent)
                 best_hmm.append(get_string_postag(postag_hmm,inv_states))
