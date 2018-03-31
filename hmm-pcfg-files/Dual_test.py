@@ -155,21 +155,21 @@ if __name__ == '__main__':
     print sent
     #for sent in sentences:
     # Initialization
-    u = np.zeros((len(sent),len(states)))
+    u = np.zeros((len(sent),len(inner_states)))
     
     for k in range(K):    
         print "New iteration : ",k        
         # Initialization
-        y_pcfg = np.zeros((len(sent),len(states)))
-        z_hmm = np.zeros((len(sent),len(states)))
+        y_pcfg = np.zeros((len(sent),len(inner_states)))
+        z_hmm = np.zeros((len(sent),len(inner_states)))
         
         print "Start HMM"
         if viterbi:
-            initial_scores, transition_scores, final_scores, emission_scores = scores_sent_dual(sent, initial_probs, transition_probs, final_probs, emission_probs, observations, states, u)
+            initial_scores, transition_scores, final_scores, emission_scores = scores_sent_dual(sent, initial_probs, transition_probs, final_probs, emission_probs, observations, states, u[:,:len(states)])
             postag_hmm, _ = postag.run_viterbi(initial_scores, transition_scores, final_scores, emission_scores)
             
         else:
-            initial_scores, transition_scores, final_scores, emission_scores = scores_sent_dual(sent, initial_probs, transition_probs, final_probs, emission_probs, observations, states, u)
+            initial_scores, transition_scores, final_scores, emission_scores = scores_sent_dual(sent, initial_probs, transition_probs, final_probs, emission_probs, observations, states, u[:,:len(states)])
             state_posteriors, _, _ = postag.compute_posteriors(initial_scores,
                                                              transition_scores,
                                                              final_scores,

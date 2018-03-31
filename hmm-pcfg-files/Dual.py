@@ -72,21 +72,22 @@ def cky_dual(words,grammar,rule_probabilities,knwon_vocab,states,u):
                 score[i,i+1,states[A]] = rule_probabilities[r] - u[i][states[A]]
 
     binary_rules = pcfg.get_binary_rules(grammar)
-    for span in range(2,len(words)+1):
-        #print("New span : ", span)
-        for begin in range(len(words)+1-span):
-            end = begin + span
-            for split in range(begin+1, end):
+    for j in range(len(words)+1):
+        #print "New span : ", j
+        for begin in xrange(j-2,-1,-1):
+            for split in xrange(begin+1, j):
                 for rule in binary_rules:
-                    if begin == 0 and end == len(words) and rule[0]!='S':
+                    if begin == 0 and j == len(words) and rule[0]!='S':
                         continue
                     a, b, c = states[rule[0]], states[rule[1]], states[rule[2]]
                     concat_rule = rule[0], ' '.join((rule[1], rule[2]))
-                    #if concat_rule in grammar:
-                    prob = score[begin,split,b] + score[split,end,c] + rule_probabilities[concat_rule]
-                    if prob > score[begin,end,a]:
-                        score[begin,end,a] = prob
-                        back[begin][end][a] = split, b, c
+                    rule_probabilities[concat_rule]
+                    prob = score[begin,split,b] + score[split,j,c] + rule_probabilities[concat_rule]
+                    if prob > score[begin][j][a]:
+                        #print "New max for prob: ", prob
+                        #print "Begin ",begin," , End ",j," , Rule index ",a
+                        score[begin,j,a] = prob
+                        back[begin][j][a] = split, b, c
 
     return pcfg.get_parse_tree(score,back,non_terms)
 
@@ -155,21 +156,21 @@ if __name__ == '__main__':
     best_pcfg = []
     for sent in sentences:
         # Initialization
-        u = np.zeros((len(sent),len(states)))
+        u = np.zeros((len(sent),len(inner_states)))
         
         for k in range(K):
             print("New iteration : ",k)             
             # Initialization
-            y_pcfg = np.zeros((len(sent),len(states)))
-            z_hmm = np.zeros((len(sent),len(states)))
+            y_pcfg = np.zeros((len(sent),len(inner_states)))
+            z_hmm = np.zeros((len(sent),len(inner_states)))
             
             
             if viterbi:
-                initial_scores, transition_scores, final_scores, emission_scores = scores_sent_dual(sent, initial_probs, transition_probs, final_probs, emission_probs, observations, states, u)
+                initial_scores, transition_scores, final_scores, emission_scores = scores_sent_dual(sent, initial_probs, transition_probs, final_probs, emission_probs, observations, states, u[:,:len(states)])
                 postag_hmm, _ = postag.run_viterbi(initial_scores, transition_scores, final_scores, emission_scores)
                 
             else:
-                initial_scores, transition_scores, final_scores, emission_scores = scores_sent_dual(sent, initial_probs, transition_probs, final_probs, emission_probs, observations, states, u)
+                initial_scores, transition_scores, final_scores, emission_scores = scores_sent_dual(sent, initial_probs, transition_probs, final_probs, emission_probs, observations, states, u[:,:len(states)])
                 state_posteriors, _, _ = postag.compute_posteriors(initial_scores,
                                                                  transition_scores,
                                                                  final_scores,
@@ -195,6 +196,7 @@ if __name__ == '__main__':
             if np.sum(y_pcfg != z_hmm) == 0:
                 print("Postag and PCFG agreed !")
                 parsed_sent, _ = pcfg.get_string_tree(parse_tree,sent)
+                print(parsed_sent)
                 best_pcfg.append(parsed_sent)
                 best_hmm.append(get_string_postag(postag_hmm,inv_states))
                 break
@@ -204,6 +206,7 @@ if __name__ == '__main__':
                 print("Constraints not satisfied, end of iterations !")
                 print("Number of differences : ", np.sum(y_pcfg != z_hmm)," with ",non_leaf," non_leaf postag.")
                 parsed_sent, _ = pcfg.get_string_tree(parse_tree,sent)
+                print(parsed_sent)
                 best_pcfg.append(parsed_sent)
                 best_hmm.append(get_string_postag(postag_hmm,inv_states))
        
