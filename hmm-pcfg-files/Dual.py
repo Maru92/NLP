@@ -23,8 +23,7 @@ def get_postag_from_parser(head,states):
     return result
 
 def update_constraints(u,k,y_pcfg,z_hmm):
-    # http://www.cs.columbia.edu/~mcollins/acltutorial.pdf
-    eta = 0.001/(1+k)
+    eta = 1e-1/(1+k)
     ind = (y_pcfg != z_hmm)
     u[ind] -= eta*(y_pcfg[ind] - z_hmm[ind])
     return u
@@ -163,7 +162,6 @@ if __name__ == '__main__':
             y_pcfg = np.zeros((len(sent),len(states)))
             z_hmm = np.zeros((len(sent),len(states)))
             
-            
             if viterbi:
                 initial_scores, transition_scores, final_scores, emission_scores = scores_sent_dual(sent, initial_probs, transition_probs, final_probs, emission_probs, observations, states, u)
                 postag_hmm, _ = postag.run_viterbi(initial_scores, transition_scores, final_scores, emission_scores)
@@ -200,9 +198,9 @@ if __name__ == '__main__':
                 break
             else:
                 u = update_constraints(u,k,y_pcfg,z_hmm)
+            print("Number of differences : ", np.sum(y_pcfg != z_hmm)," with ",non_leaf," non_leaf postag.")
             if k == K-1:
                 print("Constraints not satisfied, end of iterations !")
-                print("Number of differences : ", np.sum(y_pcfg != z_hmm)," with ",non_leaf," non_leaf postag.")
                 parsed_sent, _ = pcfg.get_string_tree(parse_tree,sent)
                 best_pcfg.append(parsed_sent)
                 best_hmm.append(get_string_postag(postag_hmm,inv_states))

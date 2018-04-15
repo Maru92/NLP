@@ -1,7 +1,7 @@
 nohup python PCFGParser.py --data=test_sents > logs/pcfg_test.txt 2> logs/erreurs_pcfg_test.log &
 nohup python PCFGParser.py --output=candidate-parses-dev > logs/pcfg_dev.txt 2> logs/erreurs_pcfg_dev.log &
-nohup python Dual.py --data=test_sents > logs/dual_test.txt 2> logs/erreurs_dual_test.log &
-nohup python Dual.py --output_parses=candidate-parses-dual-dev --output_postags=candidate-postags-dual-dev > logs/dual_dev.txt 2> logs/erreurs_dual_dev.log &
+nohup python Dual.py --data=test_sents --iteration=3 > logs/dual_test.txt 2> logs/erreurs_dual_test.log &
+nohup python Dual.py --output_parses=candidate-parses-dual-dev --output_postags=candidate-postags-dual-dev --iteration=3 > logs/dual_dev.txt 2> logs/erreurs_dual_dev.log &
 
 
 DUAL: DONE
